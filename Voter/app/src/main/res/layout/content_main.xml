@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    tools:context="voltdb.org.voter.MainActivity"
+    tools:showIn="@layout/activity_main">
+
+    <TextView
+        android:id="@+id/welcome_id"
+        android:text="Welcome to the Voter App!"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_alignParentTop="true"/>
+    <TextView
+        android:id="@+id/phone_prompt_id"
+        android:text="Can't identify your phone number. Please enter below:"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@+id/welcome_id"
+        android:layout_marginTop="24dp"/>
+    <RelativeLayout
+        android:id="@+id/phone_id"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/phone_prompt_id">
+        <TextView
+            android:id="@+id/identified_phone_id"
+            android:text="XXX-XXX-XXXX"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_alignParentTop="true"
+            android:visibility="gone"/>
+        <EditText
+            android:id="@+id/enter_phone_id"
+            android:hint="XXX-XXX-XXXX"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:singleLine="true"
+            android:layout_alignParentTop="true"/>
+
+    </RelativeLayout>
+
+    <TextView
+        android:id="@+id/contestant_dsc_id"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/phone_id"
+        android:layout_centerHorizontal="true"
+        android:text="Contestant Number"
+        android:layout_marginTop="8dp"/>
+    <EditText
+        android:id="@+id/contestant_id"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@+id/contestant_dsc_id"
+        android:hint="111111"
+        android:singleLine="true"
+        android:textAlignment="center"
+        android:minEms="10"
+        android:layout_marginTop="8dp"/>
+
+
+    <RelativeLayout
+        android:id="@+id/location_id"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/contestant_id"
+        android:layout_marginTop="24dp">
+
+        <TextView
+            android:id="@+id/geo_id"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
+            android:text="Your Geo Location"/>
+
+        <TextView
+            android:id="@+id/lon_id"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/geo_id"
+            android:layout_alignParentLeft="true"
+            android:text="Longitude: "
+            android:layout_marginTop="8dp"/>
+
+        <TextView
+            android:id="@+id/lat_id"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/lon_id"
+            android:layout_alignParentLeft="true"
+            android:text="Latitude: "
+            android:layout_marginTop="8dp"/>
+
+    </RelativeLayout>
+
+    <Button
+        android:id="@+id/button_id"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/location_id"
+        android:text="Submit vote"
+        android:textAlignment="center"
+        android:layout_marginTop="16dp"/>
+
+    <TextView
+        android:id="@+id/status_id"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/button_id"
+        android:layout_alignParentLeft="true"
+        android:text="Status: None"
+        android:layout_marginTop="8dp"/>
+
+    <TextView
+        android:id="@+id/voltdb_id"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentBottom="true"
+        android:text="VoltDB URL: "
+        android:layout_marginBottom="72dp"
+        android:layout_marginRight="8dp"/>
+
+    <EditText
+        android:id="@+id/voltdb_url_id"
+        android:hint="10.0.2.2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minEms="15"
+        android:singleLine="true"
+        android:layout_toRightOf="@+id/voltdb_id"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="64dp"/>
+
+
+</RelativeLayout>

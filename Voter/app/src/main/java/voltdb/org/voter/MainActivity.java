@@ -81,10 +81,10 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             @Override
             public void onClick(View view) {
                 if (mCallInProgress.get()) {
-                    showToastOnUIThread("Another call is in progress", Toast.LENGTH_SHORT);
+                    showToastOnUIThread(getString(R.string.another_call_in_progress), Toast.LENGTH_SHORT);
                     return;
                 }
-                setStatusOnUIThread("Status: Validating Input");
+                setStatusOnUIThread(getString(R.string.status_validating_input));
                 String validationResult = validateInput();
                 if (!VALIDATION_SUCCESS.equals(validationResult))   {
                     showToastOnUIThread(validationResult, Toast.LENGTH_SHORT);
@@ -111,7 +111,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         String phoneStr = mTelephonyManager.getLine1Number();
         if (phoneStr != null) {
             TextView phonePrompt = (TextView) findViewById(R.id.phone_prompt_id);
-            phonePrompt.setText("Your phone number");
+            phonePrompt.setText(getString(R.string.your_phone_number));
             phoneStr = mTelephonyManager.getLine1Number();
             String normilizedPhone = PhoneNumberUtils.formatNumber(phoneStr.substring(1));
             mPhone.setText(normilizedPhone);
@@ -142,7 +142,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             mLocation = mLocationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
             onLocationChanged(mLocation);
         } catch(SecurityException se) {
-            Toast toast = Toast.makeText(getApplicationContext(), "Don't have Geo Location Permissions ", Toast.LENGTH_SHORT);
+            Toast toast = Toast.makeText(getApplicationContext(), getString(R.string.no_geo_location_permissions), Toast.LENGTH_SHORT);
             toast.show();
         }
     }
@@ -152,24 +152,24 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         String phoneStr = (mPhone.getVisibility() == View.VISIBLE) ?
                 mPhone.getText().toString() : mPhoneEdit.getText().toString();
         if (Strings.isNullOrEmpty(phoneStr))  {
-            return "Phone String is empty";
+            return getString(R.string.empty_phone);
         }
         try {
             mPhoneNumber = Long.parseLong(PhoneNumberUtils.normalizeNumber(phoneStr)) % 10000000000l;
         } catch (NumberFormatException e) {
-            return "Invalid Phone Number";
+            return getString(R.string.invalid_phone);
         }
 
         // Validate Contestant id
         try {
             mContestantId = Integer.parseInt(mContestant.getText().toString());
         } catch (NumberFormatException e) {
-            return "Invalid Contestant ID";
+            return getString(R.string.invalid_contestant_id);
         }
 
         // Locatiom
         if (mLocation == null) {
-            return "Invalid Location";
+            return getString(R.string.invalid_location);
         }
 
         // VoltDB URL
@@ -180,7 +180,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             try {
                 mVoltDBPort = Integer.parseInt(voltDBAddress[1]);
             } catch (NumberFormatException e) {
-                return "Invalid VoltDB Port";
+                return getString(R.string.invalid_port);
             }
         }
 
@@ -195,7 +195,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 mLocationManager.requestLocationUpdates(mLocationProvider, 400, 1, this);
             }
         } catch (SecurityException se) {
-            Toast toast = Toast.makeText(getApplicationContext(), "Don't have Geo Location Permissions ", Toast.LENGTH_SHORT);
+            Toast toast = Toast.makeText(getApplicationContext(), getString(R.string.no_geo_location_permissions), Toast.LENGTH_SHORT);
             toast.show();
         }
     }
@@ -208,7 +208,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 mLocationManager.removeUpdates(this);
             }
         } catch (SecurityException se) {
-            Toast toast = Toast.makeText(getApplicationContext(), "Don't have Geo Location Permissions ", Toast.LENGTH_SHORT);
+            Toast toast = Toast.makeText(getApplicationContext(), getString(R.string.no_geo_location_permissions), Toast.LENGTH_SHORT);
             toast.show();
         }
     }
@@ -240,8 +240,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     public void onLocationChanged(Location location) {
         mLocation = location;
         if (mLocation != null)  {
-            mLongitude.setText("Longitude: " + Double.toString(mLocation.getLongitude()));
-            mLatitude.setText("Latitude: " + Double.toString(mLocation.getLatitude()));
+            mLongitude.setText(getString(R.string.longitude) + Double.toString(mLocation.getLongitude()));
+            mLatitude.setText(getString(R.string.latitude) + Double.toString(mLocation.getLatitude()));
         }
     }
 
@@ -314,7 +314,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         }
         @Override
         protected Client doInBackground(Void... params) {
-            setStatusOnUIThread("Status: Connection to VoltDB");
+            setStatusOnUIThread(getString(R.string.status_connecting));
 
             if (!needToReconnectVoltDB()) {
                 return mVoltClient;
@@ -335,9 +335,9 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 }
             }
             if (mVoltClient == null) {
-                showToastOnUIThread("Failed to connect to VoltDB at " + mVoltClient + ". Please verify the URL", Toast.LENGTH_SHORT);
+                showToastOnUIThread(getString(R.string.failed_to_connect), Toast.LENGTH_SHORT);
             } else {
-                setStatusOnUIThread("Status: Connected to VoltDB");
+                setStatusOnUIThread(getString(R.string.status_connected));
             }
             return mVoltClient;
         }
@@ -349,7 +349,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         @Override
         protected void onCancelled() {
             mCallInProgress.set(false);
-            setStatusOnUIThread("Status: Connection cancelled");
+            setStatusOnUIThread(getString(R.string.status_call_cancelled));
         }
 
     }
@@ -369,7 +369,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
         @Override
         protected Integer doInBackground(Void... params) {
-            setStatusOnUIThread("Status: Calling VoltDB");
+            setStatusOnUIThread(getString(R.string.status_calling));
             if (mCallInProgress.compareAndSet(false, true)) {
                 try {
                     return vote(mPhoneNumber, mLocation, mContestantId, MAX_NUM_VOTES);
@@ -388,29 +388,29 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         protected void onPostExecute(Integer result) {
             String callStatus = null;
             switch (result) {
-                case ERR_CALL_INPROGRESS: callStatus = "Another call is in progress"; break;
-                case ERR_INVALID_CONTESTANT: callStatus = "Invalid contestant"; break;
-                case ERR_VOTER_OVER_VOTE_LIMIT: callStatus = "Vote limit is exceeded"; break;
-                case ERR_CONNECTION: callStatus = "Failed to connect to VoltDB"; break;
-                case SUCCESS: callStatus = "Success"; break;
+                case ERR_CALL_INPROGRESS: callStatus = getString(R.string.another_call_in_progress); break;
+                case ERR_INVALID_CONTESTANT: callStatus = getString(R.string.invalid_contestant); break;
+                case ERR_VOTER_OVER_VOTE_LIMIT: callStatus = getString(R.string.vote_limit_exceeded); break;
+                case ERR_CONNECTION: callStatus = getString(R.string.failed_to_connect); break;
+                case SUCCESS: callStatus = getString(R.string.success); break;
                 default:
-                    callStatus = "VoltDB procedure error";
+                    callStatus = getString(R.string.voltdb_error);
                     mVoltClient = null;
                     break;
             }
-            setStatusOnUIThread(String.format("Status: VoltDB call %s.", callStatus));
+            setStatusOnUIThread(String.format("%s %s.", getString(R.string.status_voltdb), callStatus));
         }
 
         @Override
         protected void onCancelled() {
             mCallInProgress.set(false);
-            setStatusOnUIThread("Status: Call cancelled");
+            setStatusOnUIThread(getString(R.string.status_call_cancelled));
         }
 
         @Override
         protected void onCancelled(Integer result) {
             mCallInProgress.set(false);
-            setStatusOnUIThread("Status: Call cancelled");
+            setStatusOnUIThread(getString(R.string.status_call_cancelled));
         }
 
         private int vote(long phoneNumber, Location location, int contestantNumber, long maxVotesPerPhoneNumber) throws

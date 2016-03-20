@@ -14,40 +14,46 @@
 
     <TextView
         android:id="@+id/welcome_id"
-        android:text="Welcome to the Voter App!"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
-        android:layout_alignParentTop="true"/>
+        android:text="Welcome to the Voter App!" />
+
     <TextView
         android:id="@+id/phone_prompt_id"
-        android:text="Can't identify your phone number. Please enter below:"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
         android:layout_below="@+id/welcome_id"
-        android:layout_marginTop="24dp"/>
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="48dp"
+        android:text="Can't identify your phone number. Please enter below:"/>
+
     <RelativeLayout
         android:id="@+id/phone_id"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/phone_prompt_id">
+        android:layout_below="@+id/phone_prompt_id"
+        android:layout_marginTop="24dp">
+
         <TextView
             android:id="@+id/identified_phone_id"
-            android:text="XXX-XXX-XXXX"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_centerHorizontal="true"
             android:layout_alignParentTop="true"
-            android:visibility="gone"/>
+            android:layout_centerHorizontal="true"
+            android:text="XXX-XXX-XXXX"
+            android:visibility="visible" />
+
         <EditText
             android:id="@+id/enter_phone_id"
-            android:hint="XXX-XXX-XXXX"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
             android:layout_centerHorizontal="true"
+            android:hint="XXX-XXX-XXXX"
             android:singleLine="true"
-            android:layout_alignParentTop="true"/>
+            android:visibility="gone"/>
 
     </RelativeLayout>
 
@@ -57,19 +63,20 @@
         android:layout_height="wrap_content"
         android:layout_below="@+id/phone_id"
         android:layout_centerHorizontal="true"
-        android:text="Contestant Number"
-        android:layout_marginTop="8dp"/>
+        android:layout_marginTop="8dp"
+        android:text="Contestant Number" />
+
     <EditText
         android:id="@+id/contestant_id"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
         android:layout_below="@+id/contestant_dsc_id"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="8dp"
         android:hint="111111"
-        android:singleLine="true"
-        android:textAlignment="center"
         android:minEms="10"
-        android:layout_marginTop="8dp"/>
+        android:singleLine="true"
+        android:textAlignment="center" />
 
 
     <RelativeLayout
@@ -85,25 +92,25 @@
             android:layout_height="wrap_content"
             android:layout_alignParentTop="true"
             android:layout_centerHorizontal="true"
-            android:text="Your Geo Location"/>
+            android:text="Your Geo Location" />
 
         <TextView
             android:id="@+id/lon_id"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/geo_id"
             android:layout_alignParentLeft="true"
-            android:text="Longitude: "
-            android:layout_marginTop="8dp"/>
+            android:layout_below="@+id/geo_id"
+            android:layout_marginTop="8dp"
+            android:text="Longitude: " />
 
         <TextView
             android:id="@+id/lat_id"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/lon_id"
             android:layout_alignParentLeft="true"
-            android:text="Latitude: "
-            android:layout_marginTop="8dp"/>
+            android:layout_below="@+id/lon_id"
+            android:layout_marginTop="8dp"
+            android:text="Latitude: " />
 
     </RelativeLayout>
 
@@ -112,39 +119,38 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@+id/location_id"
+        android:layout_marginTop="16dp"
         android:text="Submit vote"
-        android:textAlignment="center"
-        android:layout_marginTop="16dp"/>
+        android:textAlignment="center" />
 
     <TextView
         android:id="@+id/status_id"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/button_id"
         android:layout_alignParentLeft="true"
-        android:text="Status: None"
-        android:layout_marginTop="8dp"/>
+        android:layout_below="@+id/button_id"
+        android:layout_marginTop="8dp"
+        android:text="Status: " />
 
     <TextView
         android:id="@+id/voltdb_id"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_below="@+id/status_id"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentBottom="true"
-        android:text="VoltDB URL: "
         android:layout_marginBottom="72dp"
-        android:layout_marginRight="8dp"/>
+        android:layout_marginTop="48dp"
+        android:text="VoltDB URL: " />
 
     <EditText
         android:id="@+id/voltdb_url_id"
-        android:hint="10.0.2.2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:minEms="15"
-        android:singleLine="true"
+        android:layout_marginTop="32dp"
+        android:layout_below="@+id/status_id"
         android:layout_toRightOf="@+id/voltdb_id"
-        android:layout_alignParentBottom="true"
-        android:layout_marginBottom="64dp"/>
-
+        android:hint="10.0.2.2"
+        android:minEms="15"
+        android:singleLine="true" />
 
 </RelativeLayout>

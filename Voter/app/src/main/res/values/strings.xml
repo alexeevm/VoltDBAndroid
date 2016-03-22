@@ -11,7 +11,7 @@
     <string name="status_voltdb">Status: VoltDB call </string>
     <string name="status_call_cancelled">Status: Call cancelled</string>
 
-    <string name="no_geo_location_permissions">Do nott have Geo Location Permissions </string>
+    <string name="no_geo_location_permissions">Do not have Geo Location Permissions </string>
     <string name="empty_phone">Phone String is empty</string>
     <string name="failed_to_connect">Failed to connect to VoltDB. Please verify the URL</string>
     <string name="vote_limit_exceeded">Vote limit is exceeded</string>

@@ -12,10 +12,12 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.telephony.PhoneNumberUtils;
 import android.telephony.TelephonyManager;
+import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -33,6 +35,7 @@ import org.voltdb.types.GeographyPointValue;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -44,6 +47,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     private static final String VALIDATION_SUCCESS= "VALID";
 
     private static final int MAX_NUM_VOTES = 2;
+
+    private static final int REQUEST_ID_MULTIPLE_PERMISSIONS = 100;
 
     private LocationManager mLocationManager;
     private String mLocationProvider;
@@ -106,23 +111,11 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         mPhone = (TextView) findViewById(R.id.identified_phone_id);
         mPhoneEdit = (EditText) findViewById(R.id.enter_phone_id);
 
-        mTelephonyManager = (TelephonyManager) getApplicationContext()
-                        .getSystemService(Context.TELEPHONY_SERVICE);
-        String phoneStr = mTelephonyManager.getLine1Number();
-        if (phoneStr != null) {
-            TextView phonePrompt = (TextView) findViewById(R.id.phone_prompt_id);
-            phonePrompt.setText(getString(R.string.your_phone_number));
-            phoneStr = mTelephonyManager.getLine1Number();
-            String normilizedPhone = PhoneNumberUtils.formatNumber(phoneStr.substring(1));
-            mPhone.setText(normilizedPhone);
-
-            mPhone.setVisibility(View.VISIBLE);
-            mPhoneEdit.setVisibility(View.GONE);
-        }  else {
-            mPhone.setVisibility(View.GONE);
-            mPhoneEdit.setVisibility(View.VISIBLE);
+        if(checkAndRequestPermissions()) {
+            // carry on the normal flow, as the case of  permissions  granted.
+            identifyPhoneNumber();
+            identifyLocation();
         }
-
 
         mLocationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
         if(!mLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
@@ -136,15 +129,102 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         // Define the criteria how to select the locatioin provider -> use default
         Criteria criteria = new Criteria();
         mLocationProvider = mLocationManager.getBestProvider(criteria, false);
+        if (mLocationProvider == null) {
+            mLocationProvider = LocationManager.GPS_PROVIDER;
+        }
         try {
             mLocationManager.requestLocationUpdates(mLocationProvider, 400, 1, this);
             // Update UI just in case
-            mLocation = mLocationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+            mLocation = mLocationManager.getLastKnownLocation(mLocationProvider);
             onLocationChanged(mLocation);
         } catch(SecurityException se) {
             Toast toast = Toast.makeText(getApplicationContext(), getString(R.string.no_geo_location_permissions), Toast.LENGTH_SHORT);
             toast.show();
         }
+    }
+
+    private  boolean checkAndRequestPermissions() {
+        int permissionSendMessage = ContextCompat.checkSelfPermission(this,
+                Manifest.permission.SEND_SMS);
+        int locationPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION);
+        int phonePermission = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE);
+        List<String> listPermissionsNeeded = new ArrayList<>();
+        if (locationPermission != PackageManager.PERMISSION_GRANTED) {
+            listPermissionsNeeded.add(Manifest.permission.ACCESS_FINE_LOCATION);
+        }
+        if (locationPermission != PackageManager.PERMISSION_GRANTED) {
+            listPermissionsNeeded.add(Manifest.permission.ACCESS_COARSE_LOCATION);
+        }
+        if (permissionSendMessage != PackageManager.PERMISSION_GRANTED) {
+            listPermissionsNeeded.add(Manifest.permission.READ_SMS);
+        }
+        if (phonePermission != PackageManager.PERMISSION_GRANTED) {
+            listPermissionsNeeded.add(Manifest.permission.READ_PHONE_STATE);
+        }
+        if (!listPermissionsNeeded.isEmpty()) {
+            ActivityCompat.requestPermissions(this, listPermissionsNeeded.toArray(new String[listPermissionsNeeded.size()]),REQUEST_ID_MULTIPLE_PERMISSIONS);
+            return false;
+        }
+        return true;
+    }
+
+    private void identifyPhoneNumber() {
+        mTelephonyManager = (TelephonyManager) getApplicationContext()
+                .getSystemService(Context.TELEPHONY_SERVICE);
+        String phoneStr = null;
+        try {
+            phoneStr = mTelephonyManager.getLine1Number();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        if (phoneStr != null) {
+            TextView phonePrompt = (TextView) findViewById(R.id.phone_prompt_id);
+            phonePrompt.setText(getString(R.string.your_phone_number));
+            phoneStr = mTelephonyManager.getLine1Number();
+            String normilizedPhone = PhoneNumberUtils.formatNumber(phoneStr.substring(1));
+            mPhone.setText(normilizedPhone);
+
+            mPhone.setVisibility(View.VISIBLE);
+            mPhoneEdit.setVisibility(View.GONE);
+        }  else {
+            mPhone.setVisibility(View.GONE);
+            mPhoneEdit.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private void identifyLocation() {
+        mLocationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+        if(!mLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            // check if enabled and if not send user to the GSP settings
+            // Better solution would be to display a dialog and suggesting to
+            // go to the settings
+            Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+            startActivity(intent);
+        }
+
+        // Define the criteria how to select the locatioin provider -> use default
+        Criteria criteria = new Criteria();
+        mLocationProvider = mLocationManager.getBestProvider(criteria, false);
+        if (mLocationProvider == null) {
+            mLocationProvider = LocationManager.GPS_PROVIDER;
+        }
+        try {
+            mLocationManager.requestLocationUpdates(mLocationProvider, 400, 1, this);
+            // Update UI just in case
+            mLocation = mLocationManager.getLastKnownLocation(mLocationProvider);
+            onLocationChanged(mLocation);
+        } catch(SecurityException se) {
+            showToastOnUIThread(getString(R.string.no_geo_location_permissions), Toast.LENGTH_SHORT);
+        }
+
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String permissions[], int[] grantResults) {
+        // We assume that user has granted all the permissions
+        identifyPhoneNumber();
+        identifyLocation();
     }
 
     private String validateInput() {
@@ -240,8 +320,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     public void onLocationChanged(Location location) {
         mLocation = location;
         if (mLocation != null)  {
-            mLongitude.setText(getString(R.string.longitude) + Double.toString(mLocation.getLongitude()));
-            mLatitude.setText(getString(R.string.latitude) + Double.toString(mLocation.getLatitude()));
+            mLongitude.setText(getString(R.string.longitude) + " " + Double.toString(mLocation.getLongitude()));
+            mLatitude.setText(getString(R.string.latitude) + " " + Double.toString(mLocation.getLatitude()));
         }
     }
 
@@ -330,6 +410,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
+                    mVoltClient = null;
                 } finally {
                     mCallInProgress.set(false);
                 }

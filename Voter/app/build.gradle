@@ -6,7 +6,7 @@ android {
 
     defaultConfig {
         applicationId "voltdb.org.voter"
-        minSdkVersion 21
+        minSdkVersion 19
         targetSdkVersion 23
         versionCode 1
         versionName "1.0"
@@ -27,7 +27,7 @@ dependencies {
     compile 'com.android.support:design:23.0.1'
 
     // compile 'com.google.android.gms:play-services:8.4.0'
-    compile 'com.google.android.gms:play-services-location:8.4.0'
+    //compile 'com.google.android.gms:play-services-location:8.4.0'
 
     testCompile 'junit:junit:4.12'
 

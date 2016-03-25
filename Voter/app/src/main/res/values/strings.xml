@@ -28,4 +28,8 @@
     <string name="longitude">Longitude: </string>
     <string name="latitude">Latitude: </string>
 
+    <string name="hint_phone">XXX-XXX-XXXX</string>
+    <string name="hint_voter_number">1111</string>
+    <string name="hint_default_url">http://10.0.2.2:8080</string>
+
 </resources>

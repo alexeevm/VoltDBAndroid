@@ -17,7 +17,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.telephony.PhoneNumberUtils;
 import android.telephony.TelephonyManager;
-import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -26,25 +25,26 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google_voltpatches.common.base.Strings;
 
-import org.voltdb.VoltTable;
-import org.voltdb.client.Client;
-import org.voltdb.client.ProcCallException;
-import org.voltdb.types.GeographyPointValue;
-
-import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import retrofit2.Call;
+
+import org.voltdb.rest.VoltCall;
+import org.voltdb.rest.VoltCallback;
+import org.voltdb.rest.VoltProcedure;
+import org.voltdb.rest.VoltResponse;
+import org.voltdb.rest.VoltService;
 
 public class MainActivity extends AppCompatActivity implements LocationListener {
 
-    private static final String LOCALHOST = "10.0.2.2";
-    private static final int PORT = 21212;
+    private static final String LOCALHOST = "http://10.0.2.2:8080";
 
-    private static final String VALIDATION_SUCCESS= "VALID";
+    private static final String VALIDATION_SUCCESS = "VALID";
+    private static final String VOTE_PROCEDURE = "Vote";
 
     private static final int MAX_NUM_VOTES = 2;
 
@@ -55,12 +55,10 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
     private TelephonyManager mTelephonyManager;
 
-    Location mLocation;
-    long mPhoneNumber;
-    int mContestantId;
-    String mVoltDBHost = LOCALHOST;
-    int mVoltDBPort = PORT;
-
+    private Location mLocation;
+    private long mPhoneNumber;
+    private int mContestantId;
+    private String mVoltDBHost = LOCALHOST;
 
     TextView mLongitude;
     TextView mLatitude;
@@ -69,8 +67,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     EditText mVoltDBURL;
     EditText mContestant;
     EditText mPhoneEdit;
-
-    Client mVoltClient = null;
 
     AtomicBoolean mCallInProgress = new AtomicBoolean(false);
 
@@ -95,8 +91,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                     showToastOnUIThread(validationResult, Toast.LENGTH_SHORT);
                     return;
                 }
-                VoltDBConnectTask connectTask = new VoltDBConnectTask();
-                connectTask.execute();
+
                 VoltDBVoteTask voteTask = new VoltDBVoteTask();
                 // Both tasks runs on the same thread and the select task is guaranteed to run after the connect finishes
                 voteTask.execute();
@@ -162,7 +157,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             listPermissionsNeeded.add(Manifest.permission.READ_PHONE_STATE);
         }
         if (!listPermissionsNeeded.isEmpty()) {
-            ActivityCompat.requestPermissions(this, listPermissionsNeeded.toArray(new String[listPermissionsNeeded.size()]),REQUEST_ID_MULTIPLE_PERMISSIONS);
+            ActivityCompat.requestPermissions(this, listPermissionsNeeded.toArray(new String[listPermissionsNeeded.size()]), REQUEST_ID_MULTIPLE_PERMISSIONS);
             return false;
         }
         return true;
@@ -231,7 +226,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         // Validate phone number
         String phoneStr = (mPhone.getVisibility() == View.VISIBLE) ?
                 mPhone.getText().toString() : mPhoneEdit.getText().toString();
-        if (Strings.isNullOrEmpty(phoneStr))  {
+        if (phoneStr == null)  {
             return getString(R.string.empty_phone);
         }
         try {
@@ -250,18 +245,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         // Locatiom
         if (mLocation == null) {
             return getString(R.string.invalid_location);
-        }
-
-        // VoltDB URL
-        String voltDBURL = getConnectionURL();
-        String[] voltDBAddress =  voltDBURL.split(":");
-        mVoltDBHost = voltDBAddress[0];
-        if (voltDBAddress.length > 1) {
-            try {
-                mVoltDBPort = Integer.parseInt(voltDBAddress[1]);
-            } catch (NumberFormatException e) {
-                return getString(R.string.invalid_port);
-            }
         }
 
         return VALIDATION_SUCCESS;
@@ -342,27 +325,11 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 || ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED;
     }
 
-    private String getConnectionURL() {
-        if (mVoltDBURL.getText() == null || Strings.isNullOrEmpty(mVoltDBURL.getText().toString()) ) {
+    private String getBaseURL() {
+        if (mVoltDBURL.getText() == null || mVoltDBURL.getText().length() == 0) {
             return LOCALHOST;
         }
         return mVoltDBURL.getText().toString();
-    }
-
-    private boolean needToReconnectVoltDB() {
-        if (mVoltClient == null) {
-            return true;
-        } else {
-            List<InetSocketAddress> connections = mVoltClient.getConnectedHostList();
-            if (connections != null)   {
-                for (InetSocketAddress addr : connections) {
-                    if(addr.getHostName().equals(mVoltDBHost) && addr.getPort() == mVoltDBPort) {
-                        return false;
-                    }
-                }
-            }
-        }
-        return true;
     }
 
     private void showToastOnUIThread(final String toastMsg, final int duration) {
@@ -387,55 +354,9 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
 
     // VoltDB Stuff
-    class VoltDBConnectTask extends AsyncTask<Void, Void, Client> {
 
-        @Override
-        protected  void onPreExecute() {
-        }
-        @Override
-        protected Client doInBackground(Void... params) {
-            setStatusOnUIThread(getString(R.string.status_connecting));
 
-            if (!needToReconnectVoltDB()) {
-                return mVoltClient;
-            }
-            mVoltClient = null;
-
-            if (mCallInProgress.compareAndSet(false, true)) {
-                try {
-                    mVoltClient = org.voltdb.client.ClientFactory.createClient();
-                    if (mVoltClient != null) {
-                        String connectionStr = mVoltDBHost + ":" + Integer.toString(mVoltDBPort);
-                        mVoltClient.createConnection(connectionStr);
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    mVoltClient = null;
-                } finally {
-                    mCallInProgress.set(false);
-                }
-            }
-            if (mVoltClient == null) {
-                showToastOnUIThread(getString(R.string.failed_to_connect), Toast.LENGTH_SHORT);
-            } else {
-                setStatusOnUIThread(getString(R.string.status_connected));
-            }
-            return mVoltClient;
-        }
-
-        @Override
-        protected void onPostExecute(Client result) {
-        }
-
-        @Override
-        protected void onCancelled() {
-            mCallInProgress.set(false);
-            setStatusOnUIThread(getString(R.string.status_call_cancelled));
-        }
-
-    }
-
-    class VoltDBVoteTask extends AsyncTask<Void, Void, Integer> {
+    class VoltDBVoteTask extends AsyncTask<Void, Void, VoltResponse> {
 
         static final int ERR_VOTER = -1;
         static final int ERR_CALL_INPROGRESS = -2;
@@ -449,35 +370,53 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         }
 
         @Override
-        protected Integer doInBackground(Void... params) {
+        protected VoltResponse doInBackground(Void... params) {
             setStatusOnUIThread(getString(R.string.status_calling));
             if (mCallInProgress.compareAndSet(false, true)) {
                 try {
                     return vote(mPhoneNumber, mLocation, mContestantId, MAX_NUM_VOTES);
-                } catch (Exception e) {
-                    e.printStackTrace();
                 } finally {
                     mCallInProgress.set(false);
                 }
-                return ERR_VOTER;
             } else {
-                return ERR_CALL_INPROGRESS;
+                return new VoltResponse(new Exception(getString(R.string.another_call_in_progress))) ;
             }
         }
 
         @Override
-        protected void onPostExecute(Integer result) {
+        protected void onPostExecute(VoltResponse response) {
             String callStatus = null;
-            switch (result) {
-                case ERR_CALL_INPROGRESS: callStatus = getString(R.string.another_call_in_progress); break;
-                case ERR_INVALID_CONTESTANT: callStatus = getString(R.string.invalid_contestant); break;
-                case ERR_VOTER_OVER_VOTE_LIMIT: callStatus = getString(R.string.vote_limit_exceeded); break;
-                case ERR_CONNECTION: callStatus = getString(R.string.failed_to_connect); break;
-                case SUCCESS: callStatus = getString(R.string.success); break;
-                default:
+            Throwable error = response.getCallError();
+            if (error != null) {
+                callStatus = error.getMessage();
+            }  else {
+                List<VoltResponse.VoltTable> results = response.getResults();
+                if (results == null || results.isEmpty()) {
                     callStatus = getString(R.string.voltdb_error);
-                    mVoltClient = null;
-                    break;
+                } else {
+                    VoltResponse.VoltTable table = results.get(0);
+                    List<Object> data = table.getData();
+                    if (data == null || data.isEmpty()) {
+                        callStatus = getString(R.string.voltdb_error);
+                    } else {
+                        try {
+                            List<Double> lli =  (List<Double>) data.get(0);
+                            int status = lli.get(0).intValue();
+                            switch ((int) status) {
+                                case ERR_CALL_INPROGRESS: callStatus = getString(R.string.another_call_in_progress); break;
+                                case ERR_INVALID_CONTESTANT: callStatus = getString(R.string.invalid_contestant); break;
+                                case ERR_VOTER_OVER_VOTE_LIMIT: callStatus = getString(R.string.vote_limit_exceeded); break;
+                                case ERR_CONNECTION: callStatus = getString(R.string.failed_to_connect); break;
+                                case SUCCESS: callStatus = getString(R.string.success); break;
+                                default:
+                                    callStatus = getString(R.string.voltdb_error);
+                                    break;
+                            }
+                        } catch (Exception e) {
+                            callStatus = getString(R.string.voltdb_error);
+                        }
+                    }
+                }
             }
             setStatusOnUIThread(String.format("%s %s.", getString(R.string.status_voltdb), callStatus));
         }
@@ -489,23 +428,17 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         }
 
         @Override
-        protected void onCancelled(Integer result) {
+        protected void onCancelled(VoltResponse response) {
             mCallInProgress.set(false);
             setStatusOnUIThread(getString(R.string.status_call_cancelled));
         }
 
-        private int vote(long phoneNumber, Location location, int contestantNumber, long maxVotesPerPhoneNumber) throws
-                ProcCallException, IOException {
-            if (mVoltClient == null) {
-                return ERR_CONNECTION;
-            }
-            GeographyPointValue geoLocation = new GeographyPointValue(location.getLongitude(), location.getLatitude());
-            VoltTable vt = mVoltClient.callProcedure("Vote", phoneNumber, geoLocation, contestantNumber, maxVotesPerPhoneNumber).getResults()[0];
-            if (vt.getRowCount() == 1) {
-                vt.advanceRow();
-                return (int) vt.getLong(0);
-            }
-            return ERR_VOTER;
+        private VoltResponse vote(long phoneNumber, Location location, int contestantNumber, long maxVotesPerPhoneNumber) {
+            // Init Volt Service
+            String voltURL = getBaseURL();
+            String locationStr = "POINT(" + Double.toString(location.getLongitude()) + " " + Double.toString(location.getLatitude()) + ")";
+            // Make a call
+            return VoltProcedure.callProcedure(voltURL, VOTE_PROCEDURE, phoneNumber, locationStr, contestantNumber, maxVotesPerPhoneNumber);
         }
     }
 

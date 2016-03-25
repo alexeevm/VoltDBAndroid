@@ -51,7 +51,7 @@
             android:layout_height="wrap_content"
             android:layout_alignParentTop="true"
             android:layout_centerHorizontal="true"
-            android:hint="XXX-XXX-XXXX"
+            android:hint="@string/hint_phone"
             android:singleLine="true"
             android:visibility="gone"/>
 
@@ -73,7 +73,7 @@
         android:layout_below="@+id/contestant_dsc_id"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="8dp"
-        android:hint="111111"
+        android:hint="@string/hint_voter_number"
         android:minEms="10"
         android:singleLine="true"
         android:textAlignment="center" />
@@ -149,7 +149,7 @@
         android:layout_marginTop="32dp"
         android:layout_below="@+id/status_id"
         android:layout_toRightOf="@+id/voltdb_id"
-        android:hint="10.0.2.2"
+        android:hint="@string/hint_default_url"
         android:minEms="15"
         android:singleLine="true" />
 

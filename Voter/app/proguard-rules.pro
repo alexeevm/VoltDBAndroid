@@ -15,3 +15,38 @@
 #-keepclassmembers class fqcn.of.javascript.interface.for.webview {
 #   public *;
 #}
+
+-printseeds seeds.txt
+-printmapping mapping.txt
+
+# Retrofit proguard rules
+-dontwarn retrofit2.**
+-keep class retrofit2.** { *; }
+-keepclasseswithmembers class * {
+    @retrofit2.http.* <methods>;
+}
+
+-keepattributes Signature
+-keepattributes Exceptions
+
+-keep class okhttp3.** { *; }
+-keep class okio.** { *; }
+
+# okhttp
+-dontwarn rx.**
+-dontwarn okio.**
+
+-dontwarn com.squareup.okhttp.**
+-keep class com.squareup.okhttp.** { *; }
+-keep interface com.squareup.okhttp.** { *; }
+
+#gson
+-keepattributes SourceFile, *Annotation*, InnerClasses, Signature
+-keep class com.google.gson.** { *; }
+-keep class sun.misc.Unsafe { *; }
+
+-dontwarn java.nio.**
+
+-dontwarn android.support.v4.**
+-keep class android.support.v7.** { *; }
+-keep class android.support.v4.** { *; }

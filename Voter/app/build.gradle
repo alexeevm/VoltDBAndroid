@@ -5,7 +5,7 @@ android {
     buildToolsVersion "23.0.1"
 
     defaultConfig {
-        applicationId "voltdb.org.voter"
+        applicationId "org.voltdb.mobileclient"
         minSdkVersion 21
         targetSdkVersion 23
         versionCode 1
@@ -13,7 +13,7 @@ android {
     }
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
@@ -22,18 +22,44 @@ android {
 apply plugin: 'com.android.application'
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile fileTree(include: ['*.jar'], dir: 'libs')
     compile 'com.android.support:appcompat-v7:23.0.1'
     compile 'com.android.support:design:23.0.1'
-
     compile 'com.google.code.gson:gson:2.6.1'
-
     compile 'com.squareup.retrofit2:retrofit:2.0.0-beta4'
     compile 'com.squareup.retrofit2:converter-gson:2.0.0-beta4'
     compile 'com.squareup.okhttp3:logging-interceptor:3.0.0-RC1'
     compile 'com.squareup.okhttp3:okhttp:3.1.2'
-
     testCompile 'junit:junit:4.12'
-
 }
 
+android {
+    if(project.hasProperty("VOLTDB_PROPERTIES")
+            && new File(project.property("VOLTDB_PROPERTIES")).exists()) {
+
+        Properties props = new Properties()
+        props.load(new FileInputStream(file(project.property("VOLTDB_PROPERTIES"))))
+
+        signingConfigs {
+            release {
+                storeFile file(props["VOLTDB_KEYSTORE"])
+                keyAlias props["VOLTDB_CLIENT_ALIAS"]
+                storePassword props["VOLTDB_STORE_PWD"]
+                keyPassword props["VOLTDB_KEY_PWD"]
+            }
+        }
+    }
+
+    buildTypes {
+        debug{
+            buildConfigField "String", "volt_base_url", "\"/api/1.0/\""
+            buildConfigField "okhttp3.logging.HttpLoggingInterceptor.Level", "http_debug_level", "okhttp3.logging.HttpLoggingInterceptor.Level.BODY"
+        }
+        release {
+            buildConfigField "String", "volt_base_url", "\"/api/1.0/\""
+            buildConfigField "okhttp3.logging.HttpLoggingInterceptor.Level", "http_debug_level", "okhttp3.logging.HttpLoggingInterceptor.Level.NONE"
+
+            signingConfig signingConfigs.release
+        }
+    }
+}

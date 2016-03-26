@@ -7,6 +7,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
+import voltdb.org.voter.BuildConfig;
 
 /**
  * Created by mikealexeev on 3/23/16.
@@ -19,7 +20,7 @@ public class VoltService {
                 .create();
 
         HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
-        HttpLoggingInterceptor.Level level = HttpLoggingInterceptor.Level.BODY;
+        HttpLoggingInterceptor.Level level = BuildConfig.http_debug_level;
         logging.setLevel(level);
 
         OkHttpClient.Builder httpClient = new OkHttpClient.Builder();

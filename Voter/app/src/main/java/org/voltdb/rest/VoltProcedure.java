@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import retrofit2.Call;
+import voltdb.org.voter.BuildConfig;
 
 /**
  * Created by mikealexeev on 3/23/16.
@@ -32,7 +33,7 @@ public class VoltProcedure {
             VoltCall voltCall = VoltService.createVoltService(voltURL);
 
             // Make the REST call
-            Call<VoltResponse> call = voltCall.callProcedure(procParams);
+            Call<VoltResponse> call = voltCall.callProcedure(BuildConfig.volt_base_url, procParams);
             VoltCallback callback = new VoltCallback();
             call.enqueue(callback);
 

@@ -1,9 +1,7 @@
-package org.voltdb.rest;
+package org.voltdb.restclient;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import retrofit2.Call;

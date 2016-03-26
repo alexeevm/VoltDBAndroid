@@ -1,4 +1,4 @@
-package org.voltdb.rest;
+package org.voltdb.restclient;
 
 import com.google.gson.annotations.SerializedName;
 

@@ -28,16 +28,10 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import retrofit2.Call;
-
-import org.voltdb.rest.VoltCall;
-import org.voltdb.rest.VoltCallback;
-import org.voltdb.rest.VoltProcedure;
-import org.voltdb.rest.VoltResponse;
-import org.voltdb.rest.VoltService;
+import org.voltdb.restclient.VoltProcedure;
+import org.voltdb.restclient.VoltResponse;
 
 public class MainActivity extends AppCompatActivity implements LocationListener {
 

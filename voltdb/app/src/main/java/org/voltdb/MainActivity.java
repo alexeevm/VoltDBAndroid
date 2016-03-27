@@ -1,4 +1,4 @@
-package voltdb.org.voter;
+package org.voltdb;
 
 import android.Manifest;
 import android.content.Context;
@@ -384,30 +384,45 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             if (error != null) {
                 callStatus = error.getMessage();
             }  else {
-                List<VoltResponse.VoltTable> results = response.getResults();
-                if (results == null || results.isEmpty()) {
-                    callStatus = getString(R.string.voltdb_error);
+                Integer responseStatus = response.getStatus();
+                if (responseStatus != null) {
+                    callStatus = response.getStatusstring();
                 } else {
-                    VoltResponse.VoltTable table = results.get(0);
-                    List<Object> data = table.getData();
-                    if (data == null || data.isEmpty()) {
+                    List<VoltResponse.VoltTable> results = response.getResults();
+                    if (results == null || results.isEmpty()) {
                         callStatus = getString(R.string.voltdb_error);
                     } else {
-                        try {
-                            List<Double> lli =  (List<Double>) data.get(0);
-                            int status = lli.get(0).intValue();
-                            switch ((int) status) {
-                                case ERR_CALL_INPROGRESS: callStatus = getString(R.string.another_call_in_progress); break;
-                                case ERR_INVALID_CONTESTANT: callStatus = getString(R.string.invalid_contestant); break;
-                                case ERR_VOTER_OVER_VOTE_LIMIT: callStatus = getString(R.string.vote_limit_exceeded); break;
-                                case ERR_CONNECTION: callStatus = getString(R.string.failed_to_connect); break;
-                                case SUCCESS: callStatus = getString(R.string.success); break;
-                                default:
-                                    callStatus = getString(R.string.voltdb_error);
-                                    break;
-                            }
-                        } catch (Exception e) {
+                        VoltResponse.VoltTable table = results.get(0);
+                        List<Object> data = table.getData();
+                        if (data == null || data.isEmpty()) {
                             callStatus = getString(R.string.voltdb_error);
+                        } else {
+                            try {
+                                List<Double> lli = (List<Double>) data.get(0);
+                                int status = lli.get(0).intValue();
+                                switch ((int) status) {
+                                    case ERR_CALL_INPROGRESS:
+                                        callStatus = getString(R.string.another_call_in_progress);
+                                        break;
+                                    case ERR_INVALID_CONTESTANT:
+                                        callStatus = getString(R.string.invalid_contestant);
+                                        break;
+                                    case ERR_VOTER_OVER_VOTE_LIMIT:
+                                        callStatus = getString(R.string.vote_limit_exceeded);
+                                        break;
+                                    case ERR_CONNECTION:
+                                        callStatus = getString(R.string.failed_to_connect);
+                                        break;
+                                    case SUCCESS:
+                                        callStatus = getString(R.string.success);
+                                        break;
+                                    default:
+                                        callStatus = getString(R.string.voltdb_error);
+                                        break;
+                                }
+                            } catch (Exception e) {
+                                callStatus = getString(R.string.voltdb_error);
+                            }
                         }
                     }
                 }

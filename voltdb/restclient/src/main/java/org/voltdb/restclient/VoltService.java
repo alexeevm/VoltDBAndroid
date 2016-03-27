@@ -7,7 +7,6 @@ import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
-import voltdb.org.voter.BuildConfig;
 
 /**
  * Created by mikealexeev on 3/23/16.

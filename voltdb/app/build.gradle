@@ -1,36 +1,31 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 23
-    buildToolsVersion "23.0.1"
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
 
     defaultConfig {
-        applicationId "org.voltdb.mobileclient"
-        minSdkVersion 21
-        targetSdkVersion 23
-        versionCode 1
-        versionName "1.0"
+        applicationId "org.voltdb"
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode rootProject.ext.versionCode
+        versionName rootProject.ext.versionName
     }
     buildTypes {
         release {
-            minifyEnabled true
+            minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
 }
 
-apply plugin: 'com.android.application'
-
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
-    compile 'com.android.support:appcompat-v7:23.0.1'
-    compile 'com.android.support:design:23.0.1'
-    compile 'com.google.code.gson:gson:2.6.1'
-    compile 'com.squareup.retrofit2:retrofit:2.0.0-beta4'
-    compile 'com.squareup.retrofit2:converter-gson:2.0.0-beta4'
-    compile 'com.squareup.okhttp3:logging-interceptor:3.0.0-RC1'
-    compile 'com.squareup.okhttp3:okhttp:3.1.2'
-    testCompile 'junit:junit:4.12'
+    testCompile 'junit:junit:' + rootProject.ext.junitVersion
+
+    compile 'com.android.support:appcompat-v7:' + rootProject.ext.sdkVersion
+    compile 'com.android.support:design:' + rootProject.ext.sdkVersion
+    compile project(':restclient')
 }
 
 android {
@@ -48,18 +43,18 @@ android {
                 keyPassword props["VOLTDB_KEY_PWD"]
             }
         }
-    }
 
-    buildTypes {
-        debug{
-            buildConfigField "String", "volt_base_url", "\"/api/1.0/\""
-            buildConfigField "okhttp3.logging.HttpLoggingInterceptor.Level", "http_debug_level", "okhttp3.logging.HttpLoggingInterceptor.Level.BODY"
+        buildTypes {
+            release {
+                signingConfig signingConfigs.release
+            }
         }
-        release {
-            buildConfigField "String", "volt_base_url", "\"/api/1.0/\""
-            buildConfigField "okhttp3.logging.HttpLoggingInterceptor.Level", "http_debug_level", "okhttp3.logging.HttpLoggingInterceptor.Level.NONE"
 
+    }
+    buildTypes {
+        release {
             signingConfig signingConfigs.release
         }
     }
+
 }

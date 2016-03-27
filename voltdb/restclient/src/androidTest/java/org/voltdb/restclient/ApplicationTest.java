@@ -1,4 +1,4 @@
-package voltdb.org.voter;
+package org.voltdb.restclient;
 
 import android.app.Application;
 import android.test.ApplicationTestCase;

@@ -1,0 +1,46 @@
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
+
+    defaultConfig {
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode rootProject.ext.versionCode
+        versionName rootProject.ext.versionName
+    }
+    buildTypes {
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    compile 'com.android.support:appcompat-v7:' + rootProject.ext.sdkVersion
+    compile 'com.android.support:design:' + rootProject.ext.sdkVersion
+    compile 'com.google.code.gson:gson:' + rootProject.ext.gsonVersion
+    compile 'com.squareup.retrofit2:retrofit:' + rootProject.ext.retrofitVersion
+    compile 'com.squareup.retrofit2:converter-gson:' + rootProject.ext.retrofitVersion
+    compile 'com.squareup.okhttp3:logging-interceptor:' + rootProject.ext.okhttp3LoggingVersion
+    compile 'com.squareup.okhttp3:okhttp:' + rootProject.ext.okhttp3Version
+
+    testCompile 'junit:junit:' + rootProject.ext.junitVersion
+}
+
+android {
+
+    buildTypes {
+        debug{
+            buildConfigField "String", "volt_base_url", "\"/api/1.0/\""
+            buildConfigField "okhttp3.logging.HttpLoggingInterceptor.Level", "http_debug_level", "okhttp3.logging.HttpLoggingInterceptor.Level.BODY"
+        }
+        release {
+            buildConfigField "String", "volt_base_url", "\"/api/1.0/\""
+            buildConfigField "okhttp3.logging.HttpLoggingInterceptor.Level", "http_debug_level", "okhttp3.logging.HttpLoggingInterceptor.Level.NONE"
+        }
+    }
+}
+

@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import retrofit2.Call;
-import voltdb.org.voter.BuildConfig;
 
 /**
  * Created by mikealexeev on 3/23/16.

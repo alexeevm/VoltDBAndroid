@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/restclient/restclient.iml" filepath="$PROJECT_DIR$/restclient/restclient.iml" />
       <module fileurl="file://$PROJECT_DIR$/voltdb.iml" filepath="$PROJECT_DIR$/voltdb.iml" />
     </modules>
   </component>

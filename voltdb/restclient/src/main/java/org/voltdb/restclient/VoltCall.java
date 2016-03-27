@@ -8,7 +8,6 @@ import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.Headers;
 import retrofit2.http.POST;
 import retrofit2.http.Url;
-import voltdb.org.voter.BuildConfig;
 
 /**
  * Created by mikealexeev on 3/23/16.

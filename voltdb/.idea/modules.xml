@@ -2,9 +2,9 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
-      <module fileurl="file://$PROJECT_DIR$/restclient/restclient.iml" filepath="$PROJECT_DIR$/restclient/restclient.iml" />
       <module fileurl="file://$PROJECT_DIR$/voltdb.iml" filepath="$PROJECT_DIR$/voltdb.iml" />
+      <module fileurl="file://$PROJECT_DIR$/voltdbrestclient/voltdbrestclient.iml" filepath="$PROJECT_DIR$/voltdbrestclient/voltdbrestclient.iml" />
+      <module fileurl="file://$PROJECT_DIR$/voter/voter.iml" filepath="$PROJECT_DIR$/voter/voter.iml" />
     </modules>
   </component>
 </project>

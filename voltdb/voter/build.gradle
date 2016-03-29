@@ -1,0 +1,55 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
+
+    defaultConfig {
+        applicationId "org.voltdb"
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode rootProject.ext.versionCode
+        versionName rootProject.ext.versionName
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(include: ['*.jar'], dir: 'libs')
+    testCompile 'junit:junit:' + rootProject.ext.junitVersion
+
+    compile 'com.android.support:appcompat-v7:' + rootProject.ext.sdkVersion
+    compile 'com.android.support:design:' + rootProject.ext.sdkVersion
+    compile project(':voltdbrestclient')
+}
+
+android {
+    if(project.hasProperty("VOLTDB_PROPERTIES")
+            && new File(project.property("VOLTDB_PROPERTIES")).exists()) {
+
+        Properties props = new Properties()
+        props.load(new FileInputStream(file(project.property("VOLTDB_PROPERTIES"))))
+
+        signingConfigs {
+            release {
+                storeFile file(props["VOLTDB_KEYSTORE"])
+                keyAlias props["VOLTDB_CLIENT_ALIAS"]
+                storePassword props["VOLTDB_STORE_PWD"]
+                keyPassword props["VOLTDB_KEY_PWD"]
+            }
+        }
+
+        buildTypes {
+            release {
+                signingConfig signingConfigs.release
+            }
+        }
+
+    }
+
+}

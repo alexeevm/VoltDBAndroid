@@ -8,7 +8,7 @@
     <string name="status_connecting">Status: Connecting to VoltDB</string>
     <string name="status_connected">Status: Connected to VoltDB</string>
     <string name="status_calling">Status: Calling VoltDB</string>
-    <string name="status_voltdb">Status: VoltDB call </string>
+    <string name="status_voltdb">VoltDB call status:</string>
     <string name="status_call_cancelled">Status: Call cancelled</string>
 
     <string name="no_geo_location_permissions">Do not have Geo Location Permissions </string>

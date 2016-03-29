@@ -36,15 +36,6 @@
         android:layout_below="@+id/phone_prompt_id"
         android:layout_marginTop="24dp">
 
-        <TextView
-            android:id="@+id/identified_phone_id"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentTop="true"
-            android:layout_centerHorizontal="true"
-            android:text="XXX-XXX-XXXX"
-            android:visibility="visible" />
-
         <EditText
             android:id="@+id/enter_phone_id"
             android:layout_width="wrap_content"
@@ -52,8 +43,7 @@
             android:layout_alignParentTop="true"
             android:layout_centerHorizontal="true"
             android:hint="@string/hint_phone"
-            android:singleLine="true"
-            android:visibility="gone"/>
+            android:singleLine="true" />
 
     </RelativeLayout>
 

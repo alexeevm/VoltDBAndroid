@@ -74,7 +74,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     TextView mLongitude;
     TextView mLatitude;
     TextView mStatus;
-    TextView mPhone;
     EditText mVoltDBURL;
     EditText mContestant;
     EditText mPhoneEdit;
@@ -114,7 +113,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         mStatus = (TextView) findViewById(R.id.status_id);
         mVoltDBURL = (EditText) findViewById(R.id.voltdb_url_id);
         mContestant = (EditText) findViewById(R.id.contestant_id);
-        mPhone = (TextView) findViewById(R.id.identified_phone_id);
         mPhoneEdit = (EditText) findViewById(R.id.enter_phone_id);
 
         if(checkAndRequestPermissions()) {
@@ -188,13 +186,9 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             phonePrompt.setText(getString(R.string.your_phone_number));
             phoneStr = mTelephonyManager.getLine1Number();
             String normilizedPhone = PhoneNumberUtils.formatNumber(phoneStr.substring(1));
-            mPhone.setText(normilizedPhone);
-
-            mPhone.setVisibility(View.VISIBLE);
-            mPhoneEdit.setVisibility(View.GONE);
+            mPhoneEdit.setHint(normilizedPhone);
         }  else {
-            mPhone.setVisibility(View.GONE);
-            mPhoneEdit.setVisibility(View.VISIBLE);
+            mPhoneEdit.setHint(R.string.hint_phone);
         }
     }
 
@@ -235,10 +229,9 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
     private String validateInput() {
         // Validate phone number
-        String phoneStr = (mPhone.getVisibility() == View.VISIBLE) ?
-                mPhone.getText().toString() : mPhoneEdit.getText().toString();
-        if (phoneStr == null)  {
-            return getString(R.string.empty_phone);
+        String phoneStr = mPhoneEdit.getText().toString();
+        if (phoneStr == null || phoneStr.isEmpty())  {
+            phoneStr = mPhoneEdit.getHint().toString();
         }
         try {
             mPhoneNumber = Long.parseLong(PhoneNumberUtils.normalizeNumber(phoneStr)) % 10000000000l;
@@ -401,10 +394,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             if (error != null) {
                 callStatus = error.getMessage();
             }  else {
-                Integer responseStatus = response.getStatus();
-                if (responseStatus != null) {
-                    callStatus = response.getStatusstring();
-                } else {
+                callStatus = response.getStatusstring();;
+                if (callStatus == null) {
                     List<VoltResponse.VoltTable> results = response.getResults();
                     if (results == null || results.isEmpty()) {
                         callStatus = getString(R.string.voltdb_error);

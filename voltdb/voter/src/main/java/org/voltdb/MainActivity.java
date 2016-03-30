@@ -49,6 +49,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.voltdb.restclient.VoltProcedure;
 import org.voltdb.restclient.VoltResponse;
+import org.voltdb.restclient.VoltStatus;
 
 public class MainActivity extends AppCompatActivity implements LocationListener {
 
@@ -287,21 +288,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         return true;
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
-
     // Location Listener Interface
     @Override
     public void onLocationChanged(Location location) {
@@ -379,6 +365,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             if (mCallInProgress.compareAndSet(false, true)) {
                 try {
                     return vote(mPhoneNumber, mLocation, mContestantId, MAX_NUM_VOTES);
+                } catch (Exception e) {
+                  return new VoltResponse(e);
                 } finally {
                     mCallInProgress.set(false);
                 }
@@ -394,44 +382,38 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             if (error != null) {
                 callStatus = error.getMessage();
             }  else {
-                callStatus = response.getStatusstring();;
-                if (callStatus == null) {
+                callStatus = VoltStatus.toString(response.getStatus());
+                if ("SUCCESS".equals(callStatus)) {
                     List<VoltResponse.VoltTable> results = response.getResults();
-                    if (results == null || results.isEmpty()) {
-                        callStatus = getString(R.string.voltdb_error);
-                    } else {
-                        VoltResponse.VoltTable table = results.get(0);
-                        List<Object> data = table.getData();
-                        if (data == null || data.isEmpty()) {
-                            callStatus = getString(R.string.voltdb_error);
-                        } else {
-                            try {
-                                List<Double> lli = (List<Double>) data.get(0);
-                                int status = lli.get(0).intValue();
-                                switch ((int) status) {
-                                    case ERR_CALL_INPROGRESS:
-                                        callStatus = getString(R.string.another_call_in_progress);
-                                        break;
-                                    case ERR_INVALID_CONTESTANT:
-                                        callStatus = getString(R.string.invalid_contestant);
-                                        break;
-                                    case ERR_VOTER_OVER_VOTE_LIMIT:
-                                        callStatus = getString(R.string.vote_limit_exceeded);
-                                        break;
-                                    case ERR_CONNECTION:
-                                        callStatus = getString(R.string.failed_to_connect);
-                                        break;
-                                    case SUCCESS:
-                                        callStatus = getString(R.string.success);
-                                        break;
-                                    default:
-                                        callStatus = getString(R.string.voltdb_error);
-                                        break;
-                                }
-                            } catch (Exception e) {
+                    assert(results != null && !results.isEmpty());
+                    VoltResponse.VoltTable table = results.get(0);
+                    List<Object> data = table.getData();
+                    assert(data != null && !data.isEmpty());
+                    try {
+                        List<Double> dataElement = (List<Double>) data.get(0);
+                        int status = dataElement.get(0).intValue();
+                        switch ((int) status) {
+                            case ERR_CALL_INPROGRESS:
+                                callStatus = getString(R.string.another_call_in_progress);
+                                break;
+                            case ERR_INVALID_CONTESTANT:
+                                callStatus = getString(R.string.invalid_contestant);
+                                break;
+                            case ERR_VOTER_OVER_VOTE_LIMIT:
+                                callStatus = getString(R.string.vote_limit_exceeded);
+                                break;
+                            case ERR_CONNECTION:
+                                callStatus = getString(R.string.failed_to_connect);
+                                break;
+                            case SUCCESS:
+                                callStatus = getString(R.string.success);
+                                break;
+                            default:
                                 callStatus = getString(R.string.voltdb_error);
-                            }
+                                break;
                         }
+                    } catch (Exception e) {
+                        callStatus = getString(R.string.voltdb_error);
                     }
                 }
             }

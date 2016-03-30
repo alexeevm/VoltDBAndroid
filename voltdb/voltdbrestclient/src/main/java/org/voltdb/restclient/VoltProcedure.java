@@ -39,12 +39,15 @@ public class VoltProcedure {
     }
 
     public static VoltResponse callProcedure(String voltURL, String procName, Object... params) {
+        // Init Volt Service
+        VoltCall voltCall = VoltService.createVoltService(voltURL);
+        return callProcedure(voltCall, procName, params);
+    }
+
+    public static VoltResponse callProcedure(VoltCall voltCall, String procName, Object... params) {
         try {
             // Build the parameter map
             Map<String, Object> procParams = buildParameters(procName, params);
-
-            // Init Volt Service
-            VoltCall voltCall = VoltService.createVoltService(voltURL);
 
             // Make the REST call
             Call<VoltResponse> call = voltCall.callProcedure(BuildConfig.volt_base_url, procParams);

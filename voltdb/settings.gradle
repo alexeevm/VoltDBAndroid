@@ -1,1 +1,1 @@
-include ':voter', ':voltdbrestclient'
+include ':voter', ':voltdbrestclient', ':voltdbtest'

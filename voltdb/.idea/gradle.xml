@@ -11,6 +11,7 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/voltdbrestclient" />
+            <option value="$PROJECT_DIR$/voltdbtest" />
             <option value="$PROJECT_DIR$/voter" />
           </set>
         </option>

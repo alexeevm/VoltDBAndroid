@@ -4,6 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/voltdb.iml" filepath="$PROJECT_DIR$/voltdb.iml" />
       <module fileurl="file://$PROJECT_DIR$/voltdbrestclient/voltdbrestclient.iml" filepath="$PROJECT_DIR$/voltdbrestclient/voltdbrestclient.iml" />
+      <module fileurl="file://$PROJECT_DIR$/voltdbtest/voltdbtest.iml" filepath="$PROJECT_DIR$/voltdbtest/voltdbtest.iml" />
       <module fileurl="file://$PROJECT_DIR$/voter/voter.iml" filepath="$PROJECT_DIR$/voter/voter.iml" />
     </modules>
   </component>

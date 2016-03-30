@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">VoltDBTest</string>
+    <string name="action_settings">Settings</string>
+
+    <string name="hint_default_url">http://10.0.2.2:8080</string>
+    <string name="test_connection">Test connection</string>
+
+    <string name="another_call_in_progress">Another call is in progress</string>
+    <string name="status_voltdb">VoltDB call status:</string>
+    <string name="status_call_cancelled">Call cancelled</string>
+
+
+</resources>

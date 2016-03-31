@@ -70,16 +70,15 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     private Location mLocation;
     private long mPhoneNumber;
     private int mContestantId;
-    private String mVoltDBHost = LOCALHOST;
 
-    TextView mLongitude;
-    TextView mLatitude;
-    TextView mStatus;
-    EditText mVoltDBURL;
-    EditText mContestant;
-    EditText mPhoneEdit;
+    private TextView mLongitude;
+    private TextView mLatitude;
+    private TextView mStatus;
+    private EditText mVoltDBURL;
+    private EditText mContestant;
+    private EditText mPhoneEdit;
 
-    AtomicBoolean mCallInProgress = new AtomicBoolean(false);
+    private AtomicBoolean mCallInProgress = new AtomicBoolean(false);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -116,49 +115,32 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         mContestant = (EditText) findViewById(R.id.contestant_id);
         mPhoneEdit = (EditText) findViewById(R.id.enter_phone_id);
 
+        if (!BuildConfig.voter_has_location) {
+            findViewById(R.id.location_id).setVisibility(View.INVISIBLE);
+        }
+
         if(checkAndRequestPermissions()) {
             // carry on the normal flow, as the case of  permissions  granted.
             identifyPhoneNumber();
             identifyLocation();
         }
 
-        mLocationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
-        if(!mLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-            // check if enabled and if not send user to the GSP settings
-            // Better solution would be to display a dialog and suggesting to
-            // go to the settings
-            Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-            startActivity(intent);
-        }
-
-        // Define the criteria how to select the locatioin provider -> use default
-        Criteria criteria = new Criteria();
-        mLocationProvider = mLocationManager.getBestProvider(criteria, false);
-        if (mLocationProvider == null) {
-            mLocationProvider = LocationManager.GPS_PROVIDER;
-        }
-        try {
-            mLocationManager.requestLocationUpdates(mLocationProvider, 400, 1, this);
-            // Update UI just in case
-            mLocation = mLocationManager.getLastKnownLocation(mLocationProvider);
-            onLocationChanged(mLocation);
-        } catch(SecurityException se) {
-            Toast toast = Toast.makeText(getApplicationContext(), getString(R.string.no_geo_location_permissions), Toast.LENGTH_SHORT);
-            toast.show();
-        }
     }
 
     private  boolean checkAndRequestPermissions() {
         int permissionSendMessage = ContextCompat.checkSelfPermission(this,
                 Manifest.permission.SEND_SMS);
-        int locationPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION);
+        int fineLocationPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION);
+        int coarseLocationPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION);
         int phonePermission = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE);
         List<String> listPermissionsNeeded = new ArrayList<>();
-        if (locationPermission != PackageManager.PERMISSION_GRANTED) {
-            listPermissionsNeeded.add(Manifest.permission.ACCESS_FINE_LOCATION);
-        }
-        if (locationPermission != PackageManager.PERMISSION_GRANTED) {
-            listPermissionsNeeded.add(Manifest.permission.ACCESS_COARSE_LOCATION);
+        if (BuildConfig.voter_has_location) {
+            if (fineLocationPermission != PackageManager.PERMISSION_GRANTED) {
+                listPermissionsNeeded.add(Manifest.permission.ACCESS_FINE_LOCATION);
+            }
+            if (coarseLocationPermission != PackageManager.PERMISSION_GRANTED) {
+                listPermissionsNeeded.add(Manifest.permission.ACCESS_COARSE_LOCATION);
+            }
         }
         if (permissionSendMessage != PackageManager.PERMISSION_GRANTED) {
             listPermissionsNeeded.add(Manifest.permission.READ_SMS);
@@ -194,30 +176,23 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     }
 
     private void identifyLocation() {
-        mLocationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
-        if(!mLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-            // check if enabled and if not send user to the GSP settings
-            // Better solution would be to display a dialog and suggesting to
-            // go to the settings
-            Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-            startActivity(intent);
-        }
+        if (BuildConfig.voter_has_location) {
+            mLocationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+            if (!mLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                // check if enabled and if not send user to the GSP settings
+                // Better solution would be to display a dialog and suggesting to
+                // go to the settings
+                Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                startActivity(intent);
+            }
 
-        // Define the criteria how to select the locatioin provider -> use default
-        Criteria criteria = new Criteria();
-        mLocationProvider = mLocationManager.getBestProvider(criteria, false);
-        if (mLocationProvider == null) {
-            mLocationProvider = LocationManager.GPS_PROVIDER;
+            // Define the criteria how to select the locatioin provider -> use default
+            Criteria criteria = new Criteria();
+            mLocationProvider = mLocationManager.getBestProvider(criteria, false);
+            if (mLocationProvider == null) {
+                mLocationProvider = LocationManager.GPS_PROVIDER;
+            }
         }
-        try {
-            mLocationManager.requestLocationUpdates(mLocationProvider, 400, 1, this);
-            // Update UI just in case
-            mLocation = mLocationManager.getLastKnownLocation(mLocationProvider);
-            onLocationChanged(mLocation);
-        } catch(SecurityException se) {
-            showToastOnUIThread(getString(R.string.no_geo_location_permissions), Toast.LENGTH_SHORT);
-        }
-
     }
 
     @Override
@@ -247,9 +222,19 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             return getString(R.string.invalid_contestant_id);
         }
 
-        // Locatiom
-        if (mLocation == null) {
-            return getString(R.string.invalid_location);
+        // Location
+        if (BuildConfig.voter_has_location && mLocation == null) {
+            // Try one more time
+            try {
+                mLocation = mLocationManager.getLastKnownLocation(mLocationProvider);
+                onLocationChanged(mLocation);
+            } catch (SecurityException se) {
+                Toast toast = Toast.makeText(getApplicationContext(), getString(R.string.no_geo_location_permissions), Toast.LENGTH_SHORT);
+                toast.show();
+            }
+            if (mLocation == null) {
+                return getString(R.string.invalid_location);
+            }
         }
 
         return VALIDATION_SUCCESS;
@@ -259,7 +244,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     protected void onResume() {
         super.onResume();
         try {
-            if (hasGeoPermissions()) {
+            if (BuildConfig.voter_has_location && hasGeoPermissions() && mLocationManager != null) {
                 mLocationManager.requestLocationUpdates(mLocationProvider, 400, 1, this);
             }
         } catch (SecurityException se) {
@@ -272,7 +257,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     protected void onPause() {
         super.onPause();
         try {
-            if (hasGeoPermissions()) {
+            if (BuildConfig.voter_has_location && hasGeoPermissions() && mLocationManager != null) {
                 mLocationManager.removeUpdates(this);
             }
         } catch (SecurityException se) {
@@ -364,7 +349,11 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             setStatusOnUIThread(getString(R.string.status_calling));
             if (mCallInProgress.compareAndSet(false, true)) {
                 try {
-                    return vote(mPhoneNumber, mLocation, mContestantId, MAX_NUM_VOTES);
+                    if (BuildConfig.voter_has_location) {
+                        return vote(mPhoneNumber, mLocation, mContestantId, MAX_NUM_VOTES);
+                    } else {
+                        return vote(mPhoneNumber, mContestantId, MAX_NUM_VOTES);
+                    }
                 } catch (Exception e) {
                   return new VoltResponse(e);
                 } finally {
@@ -415,6 +404,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                     } catch (Exception e) {
                         callStatus = getString(R.string.voltdb_error);
                     }
+                } else if (response.getStatusstring() != null ){
+                    callStatus = response.getStatusstring();
                 }
             }
             setStatusOnUIThread(String.format("%s %s.", getString(R.string.status_voltdb), callStatus));
@@ -438,6 +429,12 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             String locationStr = "POINT(" + Double.toString(location.getLongitude()) + " " + Double.toString(location.getLatitude()) + ")";
             // Make a call
             return VoltProcedure.callProcedure(voltURL, VOTE_PROCEDURE, phoneNumber, locationStr, contestantNumber, maxVotesPerPhoneNumber);
+        }
+
+        private VoltResponse vote(long phoneNumber, int contestantNumber, long maxVotesPerPhoneNumber) {
+            // Init Volt Service
+            String voltURL = getBaseURL();
+            return VoltProcedure.callProcedure(voltURL, VOTE_PROCEDURE, phoneNumber, contestantNumber, maxVotesPerPhoneNumber);
         }
     }
 

@@ -9,6 +9,7 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode rootProject.ext.versionCode
         versionName rootProject.ext.versionName
+        archivesBaseName = "voltdbrestclient-$versionName"
     }
     buildTypes {
         release {
@@ -31,6 +32,17 @@ dependencies {
 }
 
 android {
+
+    // Create libraryDebug and libraryRelease configurations to make sure the library will be built in the same mode as the app
+    // The app then need to use
+    // debugCompile project(path: ':voltdbrestclient', configuration: "libraryDebug")
+    // releaseCompile project(path: ':voltdbrestclient', configuration: "libraryRelease")
+    defaultPublishConfig 'release'
+    publishNonDefault true
+    productFlavors {
+        library {
+        }
+    }
 
     buildTypes {
         debug{

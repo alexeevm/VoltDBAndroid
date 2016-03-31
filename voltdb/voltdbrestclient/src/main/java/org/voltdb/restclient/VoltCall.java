@@ -31,7 +31,6 @@ import retrofit2.http.Url;
  */
 public interface VoltCall {
 
-    public static final String BASE_URL = BuildConfig.volt_base_url;
     @FormUrlEncoded
     @Headers({
          "Accept: application/json",

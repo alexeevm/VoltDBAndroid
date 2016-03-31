@@ -23,7 +23,7 @@ public class VoltDBTestActivity extends AppCompatActivity {
 
     private EditText mVoltDBURL;
 
-    AtomicBoolean mCallInProgress = new AtomicBoolean(false);
+    private AtomicBoolean mCallInProgress = new AtomicBoolean(false);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

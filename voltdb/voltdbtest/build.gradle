@@ -10,6 +10,7 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode rootProject.ext.versionCode
         versionName rootProject.ext.versionName
+        archivesBaseName = "voltdbtest-$versionName"
     }
     buildTypes {
         release {
@@ -25,5 +26,7 @@ dependencies {
 
     compile 'com.android.support:appcompat-v7:' + rootProject.ext.sdkVersion
     compile 'com.android.support:design:' + rootProject.ext.sdkVersion
-    compile project(':voltdbrestclient')
+    debugCompile project(path: ':voltdbrestclient', configuration: "libraryDebug")
+    releaseCompile project(path: ':voltdbrestclient', configuration: "libraryRelease")
+
 }

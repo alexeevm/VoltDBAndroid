@@ -58,6 +58,11 @@ public class VoltStatus {
     public static final byte OPERATIONAL_FAILURE = -9;
 
     /**
+     * Status code indicating that the client wasn't able to establish network connection to the database.
+     */
+    public static final byte CONNECTION_ERROR = -10;
+
+    /**
      * Default value for the user specified app status code field
      */
     public static final byte UNINITIALIZED_APP_STATUS_CODE = Byte.MIN_VALUE;
@@ -73,6 +78,7 @@ public class VoltStatus {
             case CONNECTION_TIMEOUT:            return "CONNECTION_TIMEOUT";
             case RESPONSE_UNKNOWN:              return "RESPONSE_UNKNOWN";
             case OPERATIONAL_FAILURE:           return "OPERATIONAL_FAILURE";
+            case CONNECTION_ERROR:               return "CONNECTION_ERROR";
             case UNINITIALIZED_APP_STATUS_CODE: return "UNINITIALIZED";
             default:                            return "UNKNOWN";
         }

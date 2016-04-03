@@ -27,14 +27,24 @@ import retrofit2.http.POST;
 import retrofit2.http.Url;
 
 /**
- * Created by mikealexeev on 3/23/16.
+ * VoltCall declares a method to call VoltDB over its JSON HTTP interface. The interface has a package visibility
+ * to shields users from specifying VoltDB base URL (like /api/1.0/) which is defined in the project's
+ * property file. The clients should use VoltClient methods to make actuall calls
  */
-public interface VoltCall {
+interface VoltCall {
 
+    /**
+     * See <a href="https://docs.voltdb.com/UsingVoltDB/ProgLangJson.php#ftn.fnJsonPortNum">VoltDB JSON HTTTP Interface</a>
+     * for more information.
+     *
+     * @param voltBaseUrl VoltDB JSON HTTP base url
+     * @param params JSON parameters
+     * @return
+     */
     @FormUrlEncoded
     @Headers({
          "Accept: application/json",
     })
     @POST()
-    Call<VoltResponse> callProcedure(@Url String url, @FieldMap Map<String, Object> params);
+    Call<VoltResponse> callProcedure(@Url String voltBaseUrl, @FieldMap Map<String, Object> params);
 }

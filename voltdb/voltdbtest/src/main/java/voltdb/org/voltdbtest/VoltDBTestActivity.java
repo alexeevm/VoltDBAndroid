@@ -9,10 +9,12 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import org.voltdb.restclient.VoltProcedure;
+import org.voltdb.restclient.VoltClient;
 import org.voltdb.restclient.VoltResponse;
 import org.voltdb.restclient.VoltStatus;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class VoltDBTestActivity extends AppCompatActivity {
@@ -115,11 +117,12 @@ public class VoltDBTestActivity extends AppCompatActivity {
                     Toast.LENGTH_SHORT);
         }
 
-        private VoltResponse testConnection() {
+        private VoltResponse testConnection() throws MalformedURLException {
             // Init Volt Service
             String voltURL = getBaseURL();
             // Make a call
-            return VoltProcedure.callProcedure(voltURL, VOTE_PROCEDURE);
+            VoltClient voltClient = new VoltClient(new URL(voltURL), 5000);
+            return voltClient.callProcedureSync(VOTE_PROCEDURE);
         }
     }
 

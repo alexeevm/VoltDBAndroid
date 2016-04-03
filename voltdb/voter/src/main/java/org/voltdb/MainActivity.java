@@ -36,18 +36,19 @@ import android.telephony.PhoneNumberUtils;
 import android.telephony.TelephonyManager;
 import android.view.View;
 import android.view.Menu;
-import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.voltdb.restclient.VoltProcedure;
+import org.voltdb.restclient.VoltClient;
 import org.voltdb.restclient.VoltResponse;
 import org.voltdb.restclient.VoltStatus;
 
@@ -423,18 +424,20 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             setStatusOnUIThread(getString(R.string.status_call_cancelled));
         }
 
-        private VoltResponse vote(long phoneNumber, Location location, int contestantNumber, long maxVotesPerPhoneNumber) {
+        private VoltResponse vote(long phoneNumber, Location location, int contestantNumber, long maxVotesPerPhoneNumber) throws MalformedURLException{
             // Init Volt Service
             String voltURL = getBaseURL();
             String locationStr = "POINT(" + Double.toString(location.getLongitude()) + " " + Double.toString(location.getLatitude()) + ")";
             // Make a call
-            return VoltProcedure.callProcedure(voltURL, VOTE_PROCEDURE, phoneNumber, locationStr, contestantNumber, maxVotesPerPhoneNumber);
+            VoltClient voltClient = new VoltClient(new URL(voltURL), 5000);
+            return voltClient.callProcedureSync(VOTE_PROCEDURE, phoneNumber, locationStr, contestantNumber, maxVotesPerPhoneNumber);
         }
 
-        private VoltResponse vote(long phoneNumber, int contestantNumber, long maxVotesPerPhoneNumber) {
+        private VoltResponse vote(long phoneNumber, int contestantNumber, long maxVotesPerPhoneNumber) throws  MalformedURLException{
             // Init Volt Service
             String voltURL = getBaseURL();
-            return VoltProcedure.callProcedure(voltURL, VOTE_PROCEDURE, phoneNumber, contestantNumber, maxVotesPerPhoneNumber);
+            VoltClient voltClient = new VoltClient(new URL(voltURL), 5000);
+            return voltClient.callProcedureSync(VOTE_PROCEDURE, phoneNumber, contestantNumber, maxVotesPerPhoneNumber);
         }
     }
 

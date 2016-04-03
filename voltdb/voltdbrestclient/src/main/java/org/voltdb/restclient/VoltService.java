@@ -20,17 +20,27 @@ package org.voltdb.restclient;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import java.util.concurrent.TimeUnit;
+
+import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 /**
- * Created by mikealexeev on 3/23/16.
+ * Helper class to instantiate a VoltCall instance
  */
-public class VoltService {
+class VoltService {
 
-    public static VoltCall createVoltService(final String voltBaseUrl) {
+    /**
+     * Return a VoltCall object. If timeout is set to zero, the default OkHTTPClient timeout will be used
+     *
+     * @param voltBaseUrl VoltDB URL
+     * @param timeout  timeout in milliseconds
+     * @return VoltCall
+     */
+    public static VoltCall createVoltService(final HttpUrl voltBaseUrl, int timeout) {
         Gson gson = new GsonBuilder()
                 .setDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
                 .create();
@@ -39,16 +49,17 @@ public class VoltService {
         HttpLoggingInterceptor.Level level = BuildConfig.http_debug_level;
         logging.setLevel(level);
 
-        OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
+        OkHttpClient.Builder httpClientBuilder = new OkHttpClient.Builder();
         // add logging as last interceptor
-        httpClient.addInterceptor(logging);
+        httpClientBuilder.addInterceptor(logging);
+
+        // Set timeout
+        httpClientBuilder.connectTimeout(timeout, TimeUnit.MILLISECONDS);
 
         Retrofit.Builder builder = new Retrofit.Builder()
                 .addConverterFactory(GsonConverterFactory.create(gson))
-                .client(httpClient.build());
-        if (voltBaseUrl != null && !voltBaseUrl.isEmpty()) {
-            builder.baseUrl(voltBaseUrl);
-        }
+                .client(httpClientBuilder.build())
+                .baseUrl(voltBaseUrl);
         return builder.build().create(VoltCall.class);
     }
 

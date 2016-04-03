@@ -18,18 +18,39 @@
 package org.voltdb.restclient;
 
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
 /**
- * Created by mikealexeev on 3/24/16.
+ * VoltCall callback
  */
 public class VoltCallback implements Callback<VoltResponse> {
-    private CountDownLatch mlatch = new CountDownLatch(1);
+    private CountDownLatch mlatch;
     private VoltResponse mvoltResponse;
     private Throwable mvoltError;
+
+    // timeout in milliseconds
+    private int mTimeout;
+
+    /**
+     * Constructor has package visibility - it is instantiaed by the VoltClient to set a timeout properly
+     * @param timeout timeout in milliseconds
+     */
+    VoltCallback(int timeout) {
+        mTimeout = timeout;
+        mlatch = new CountDownLatch(1) ;
+    }
+
+    /**
+     * Constructor without a specified timeout. The actual timeout will be set by
+     * the networking libraries.
+     */
+    VoltCallback() {
+        this(0);
+    }
 
     @Override
     public void onResponse(Call<VoltResponse> call, Response<VoltResponse> response) {
@@ -45,6 +66,7 @@ public class VoltCallback implements Callback<VoltResponse> {
     }
 
     public VoltResponse getVoltResponse() {
+        // @TODO Need sync there
         return mvoltResponse;
     }
 
@@ -53,7 +75,15 @@ public class VoltCallback implements Callback<VoltResponse> {
     }
 
     public void await() throws InterruptedException {
-        mlatch.await();
+        if (mTimeout > 0) {
+            mlatch.await(mTimeout, TimeUnit.MILLISECONDS);
+        }  else {
+            mlatch.await();
+        }
+    }
+
+    public boolean hasResult() {
+        return mlatch.getCount() == 0;
     }
 
 }

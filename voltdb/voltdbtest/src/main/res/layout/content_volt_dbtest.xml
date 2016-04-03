@@ -50,5 +50,14 @@
         android:text="@string/test_connection"
         android:textAlignment="center" />
 
+    <TextView
+        android:id="@+id/status_id"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/button_id"
+        android:layout_marginTop="8dp"
+        android:text="Status: " />
+
 
 </RelativeLayout>

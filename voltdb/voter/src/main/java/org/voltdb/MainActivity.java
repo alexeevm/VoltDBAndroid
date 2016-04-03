@@ -343,6 +343,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
         @Override
         protected void onPreExecute() {
+            mStatus.setText("");
         }
 
         @Override

@@ -7,6 +7,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import org.voltdb.restclient.VoltClient;
@@ -24,6 +25,7 @@ public class VoltDBTestActivity extends AppCompatActivity {
     private static final String VOTE_PROCEDURE = "@SystemInformation";
 
     private EditText mVoltDBURL;
+    private TextView mStatus;
 
     private AtomicBoolean mCallInProgress = new AtomicBoolean(false);
 
@@ -35,6 +37,7 @@ public class VoltDBTestActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         mVoltDBURL = (EditText) findViewById(R.id.voltdb_url_id);
+        mStatus = (TextView) findViewById(R.id.status_id);
 
         Button voltDBButton = (Button) findViewById(R.id.button_id);
         voltDBButton.setOnClickListener(new View.OnClickListener() {
@@ -74,6 +77,7 @@ public class VoltDBTestActivity extends AppCompatActivity {
 
         @Override
         protected void onPreExecute() {
+            mStatus.setText("");
         }
 
         @Override
@@ -100,7 +104,9 @@ public class VoltDBTestActivity extends AppCompatActivity {
             }  else {
                 callStatus = VoltStatus.toString(response.getStatus());
             }
-            showToastOnUIThread(String.format("%s %s.", getString(R.string.status_voltdb), callStatus), Toast.LENGTH_SHORT);
+            String status = String.format("%s %s.", getString(R.string.status_voltdb), callStatus);
+            mStatus.setText(status);
+            showToastOnUIThread(status, Toast.LENGTH_SHORT);
         }
 
         @Override

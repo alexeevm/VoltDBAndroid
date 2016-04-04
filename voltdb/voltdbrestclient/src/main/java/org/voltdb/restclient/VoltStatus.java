@@ -1,5 +1,9 @@
 package org.voltdb.restclient;
 
+import java.net.ConnectException;
+import java.net.SocketTimeoutException;
+import java.util.concurrent.TimeoutException;
+
 /**
  * Created by mikealexeev on 3/29/16.
  */
@@ -83,5 +87,18 @@ public class VoltStatus {
             default:                            return "UNKNOWN";
         }
     }
+
+    public static int getStatus(Throwable t) {
+        if (t instanceof ConnectException) {
+            return VoltStatus.CONNECTION_ERROR;
+        } else if (t instanceof TimeoutException) {
+            return VoltStatus.CONNECTION_TIMEOUT;
+        }  else if (t instanceof SocketTimeoutException) {
+            return VoltStatus.CONNECTION_TIMEOUT;
+        } else {
+            return VoltStatus.UNEXPECTED_FAILURE;
+        }
+    }
+
 
 }

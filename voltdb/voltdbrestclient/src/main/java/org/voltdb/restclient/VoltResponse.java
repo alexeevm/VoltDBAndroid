@@ -209,6 +209,9 @@ public class VoltResponse {
     }
 
     public VoltResponse(Throwable t) {
+        assert(t != null);
         mThrowable = t;
+        setStatusstring(t.getMessage());
+        setStatus(VoltStatus.getStatus(t));
     }
 }

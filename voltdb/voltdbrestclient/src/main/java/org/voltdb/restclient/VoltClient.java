@@ -17,13 +17,10 @@
 
 package org.voltdb.restclient;
 
-import java.net.ConnectException;
-import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.TimeoutException;
 
 import okhttp3.HttpUrl;
 import retrofit2.Call;
@@ -49,7 +46,6 @@ public class VoltClient {
     private String mPassword;
     private String mHashedPassword;
     private Boolean misAdmin;
-    private String mJsonp;
     private int mQueryTimeout;
 
     private VoltCall mVoltCall;
@@ -68,15 +64,13 @@ public class VoltClient {
      * @param password          password for authentication
      * @param hashedpassword    Hashed password for authentication
      * @param isAdmin           true|false
-     * @param jsonp             function-name
      * @param queryTimeout      call timeout in milliseconds
      */
-    public VoltClient(URL voltURL, String username, String password, String hashedpassword, Boolean isAdmin, String jsonp, int queryTimeout) {
+    public VoltClient(URL voltURL, String username, String password, String hashedpassword, Boolean isAdmin, int queryTimeout) {
         mUsername = username;
         mPassword = password;
         mHashedPassword = hashedpassword;
         misAdmin = isAdmin;
-        mJsonp = jsonp;
         mQueryTimeout = queryTimeout;
 
         mVoltCall = VoltService.createVoltService(HttpUrl.get(voltURL), queryTimeout);
@@ -92,7 +86,7 @@ public class VoltClient {
      * @param timeout           call timeout in milliseconds
      */
     public VoltClient(URL voltURL, String username, String password, String hashedpassword, int timeout) {
-        this(voltURL, username, password, hashedpassword, null, null, timeout);
+        this(voltURL, username, password, hashedpassword, null, timeout);
     }
     /**
      * Class Constructor.
@@ -103,7 +97,7 @@ public class VoltClient {
      * @param hashedpassword    Hashed password for authentication
      */
     public VoltClient(URL voltURL, String username, String password, String hashedpassword) {
-        this(voltURL, username, password, hashedpassword, null, null, 0);
+        this(voltURL, username, password, hashedpassword, null, 0);
     }
 
     /**
@@ -113,7 +107,7 @@ public class VoltClient {
      * @param timeout           call timeout in milliseconds
      */
     public VoltClient(URL voltURL, int timeout) {
-        this(voltURL, null, null, null, null, null, timeout);
+        this(voltURL, null, null, null, null, timeout);
     }
     /**
      * Class Constructor.
@@ -121,7 +115,7 @@ public class VoltClient {
      * @param voltURL           VoltDb URL
      */
     public VoltClient(URL voltURL) {
-        this(voltURL, null, null, null, null, null, 0);
+        this(voltURL, null, null, null, null, 0);
     }
 
     /**
@@ -130,7 +124,7 @@ public class VoltClient {
      * @param params  vararg list of procedure's parameter values.
      * @return name/value parameter map
      */
-    private Map<String, Object> buildParameters(String procName, Object... params) {
+    private Map<String, Object> buildParameters(String procName, String jsonp, Object... params) {
         Map<String, Object> paramsMap = new HashMap<>();
         paramsMap.put(PARAM_PROCEDURE, procName);
         paramsMap.put(PARAM_PARAMETERS, Arrays.asList(params));
@@ -146,8 +140,8 @@ public class VoltClient {
         if (misAdmin != null) {
             paramsMap.put(PARAM_ISADMIN, misAdmin);
         }
-        if (mJsonp != null) {
-            paramsMap.put(PARAM_JSONP, mJsonp);
+        if (jsonp != null) {
+            paramsMap.put(PARAM_JSONP, jsonp);
         }
         return paramsMap;
     }
@@ -156,13 +150,14 @@ public class VoltClient {
      * <p>Synchronously invoke a procedure with timeout. Blocks until a result is available or timeout is reached.
      *
      * @param procName <code>class</code> name (not qualified by package) of the procedure to execute.
+     * @param jsonp      function-name
      * @param parameters vararg list of procedure's parameter values.
      * @return VoltResponse object. In case of any exception, the response will contain the exception object thrown
      */
-    public VoltResponse callProcedureSync(String procName, Object... parameters) {
+    public VoltResponse callProcedureSync(String procName, String jsonp, Object... parameters) {
         try {
             // Build the parameter map
-            Map<String, Object> procParams = buildParameters(procName, parameters);
+            Map<String, Object> procParams = buildParameters(procName, jsonp, parameters);
 
             // Make the REST call
             Call<VoltResponse> call = mVoltCall.callProcedure(BuildConfig.volt_base_url, procParams);
@@ -170,34 +165,27 @@ public class VoltClient {
             call.enqueue(callback);
 
             // Wait unitl call returns or times out
-            callback.await();
-            VoltResponse voltResponse = callback.getVoltResponse();
-            if (voltResponse == null) {
-                Throwable t = null;
-                if (!callback.hasResult()) {
-                    // The callback returns because of the timeout
-                    t = new TimeoutException(String.format("No response has received after the %d ms.", mQueryTimeout));
-                } else {
-                    t = callback.getVoltError();
-                }
-                voltResponse = getErrorResponse(t);
-            }
-            return voltResponse;
+            return  callback.await();
         } catch (Exception e) {
-            return getErrorResponse(e);
+            return new VoltResponse(e);
         }
+    }
+
+    public VoltResponse callProcedureSync(String procName, Object... parameters) {
+        return callProcedureSync(procName, null, parameters);
     }
 
     /**
      * <p>Asynchronously invoke a procedure. Returns a callback object without blocking
      *
-     * @param procName <code>class</code> name (not qualified by package) of the procedure to execute.
+     * @param procName   <code>class</code> name (not qualified by package) of the procedure to execute.
+     * @param jsonp      function-name
      * @param parameters vararg list of procedure's parameter values.
      * @return VoltCallback object
      */
-    public VoltCallback callProcedureAsync(String procName, Object... parameters) {
+    public VoltCallback callProcedureAsync(String procName, String jsonp, Object... parameters) {
         // Build the parameter map
-        Map<String, Object> procParams = buildParameters(procName, parameters);
+        Map<String, Object> procParams = buildParameters(procName, jsonp, parameters);
 
         // Make the REST call
         Call<VoltResponse> call = mVoltCall.callProcedure(BuildConfig.volt_base_url, procParams);
@@ -207,20 +195,7 @@ public class VoltClient {
         return callback;
     }
 
-    private VoltResponse getErrorResponse(Throwable t) {
-        VoltResponse voltResponse = new VoltResponse(t);
-        voltResponse.setStatusstring(t.getMessage());
-        if (t instanceof ConnectException) {
-            voltResponse.setStatus(VoltStatus.CONNECTION_ERROR);
-        } else if (t instanceof TimeoutException) {
-            voltResponse.setStatus(VoltStatus.CONNECTION_TIMEOUT);
-        }  else if (t instanceof SocketTimeoutException) {
-            voltResponse.setStatus(VoltStatus.CONNECTION_TIMEOUT);
-        } else {
-            voltResponse.setStatus(VoltStatus.UNEXPECTED_FAILURE);
-        }
-        return voltResponse;
+    public VoltCallback callProcedureAsync(String procName, Object... parameters) {
+        return callProcedureAsync(procName, null, parameters);
     }
-
-
 }

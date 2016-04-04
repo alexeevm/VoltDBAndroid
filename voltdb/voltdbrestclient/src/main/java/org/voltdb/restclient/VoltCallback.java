@@ -19,6 +19,7 @@ package org.voltdb.restclient;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -54,36 +55,45 @@ public class VoltCallback implements Callback<VoltResponse> {
 
     @Override
     public void onResponse(Call<VoltResponse> call, Response<VoltResponse> response) {
-        mvoltResponse = response.body();
-        // Release the latch
-        mlatch.countDown();
+        try {
+            mvoltResponse = response.body();
+        } finally {
+            // Release the latch
+            mlatch.countDown();
+        }
     }
 
    @Override
     public void onFailure(Call<VoltResponse> call, Throwable t) {
-        mvoltError = t;
-        mlatch.countDown();
+       try {
+           mvoltError = t;
+       } finally {
+           // Release the latch
+           mlatch.countDown();
+       }
     }
 
-    public VoltResponse getVoltResponse() {
-        // @TODO Need sync there
-        return mvoltResponse;
-    }
-
-    public Throwable getVoltError() {
-        return mvoltError;
-    }
-
-    public void await() throws InterruptedException {
+    public VoltResponse await() throws InterruptedException {
         if (mTimeout > 0) {
             mlatch.await(mTimeout, TimeUnit.MILLISECONDS);
         }  else {
             mlatch.await();
+        }
+
+        if (mvoltResponse == null && mvoltError == null) {
+            // timeout has being reached
+            assert(mTimeout > 0);
+            mvoltError = new TimeoutException(String.format("No response has received after the %d ms.", mTimeout));
+        }
+        if (mvoltResponse != null) {
+            return mvoltResponse;
+        } else {
+            assert (mvoltError != null);
+            return new VoltResponse(mvoltError);
         }
     }
 
     public boolean hasResult() {
         return mlatch.getCount() == 0;
     }
-
 }

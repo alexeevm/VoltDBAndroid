@@ -5,17 +5,16 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.File;
-import java.io.OutputStreamWriter;
 import java.net.ConnectException;
-import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.util.concurrent.TimeoutException;
 
-import static org.junit.Assert.*;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
- * Prerequisit - start the VOltDB on localhost:8080
+ *
  */
 public class VoltClientTest {
 
@@ -67,9 +66,8 @@ public class VoltClientTest {
     public void testAsyncConnectionSuccess() throws Exception {
         VoltClient voltClient = new VoltClient(new URL(VALID_LOCALHOST), 5000);
         VoltCallback callback = voltClient.callProcedureAsync(VOTE_PROCEDURE);
-        callback.await();
+        VoltResponse response = callback.await();
         assertTrue(callback.hasResult());
-        VoltResponse response  = callback.getVoltResponse();
         verifySuccessResponse(response, VoltStatus.SUCCESS);
     }
 
@@ -77,16 +75,18 @@ public class VoltClientTest {
     public void testAsyncConnectionFailure() throws Exception {
         VoltClient voltClient = new VoltClient(new URL(INVALID_LOCALHOST), 1000);
         VoltCallback callback = voltClient.callProcedureAsync(VOTE_PROCEDURE);
-        callback.await();
-        verifyErrorCallback(callback, ConnectException.class);
+        VoltResponse response = callback.await();
+        assertTrue(callback.hasResult());
+        verifyErrorResponse(response, VoltStatus.CONNECTION_ERROR, ConnectException.class);
     }
 
     @Test
     public void testAsyncConnectionTimeout() throws Exception {
         VoltClient voltClient = new VoltClient(new URL(INVALID_LOCALHOST), 1);
         VoltCallback callback = voltClient.callProcedureAsync(VOTE_PROCEDURE);
-        callback.await();
-        verifyPrematureCallback(callback);
+        VoltResponse response = callback.await();
+        assertTrue(!callback.hasResult());
+        verifyErrorResponse(response, VoltStatus.CONNECTION_TIMEOUT, TimeoutException.class);
     }
 
     private void verifySuccessResponse(VoltResponse response, int status) {
@@ -101,23 +101,6 @@ public class VoltClientTest {
         assertEquals(status, response.getStatus().byteValue());
         Throwable t = response.getCallError();
         assertTrue(t != null);
-        assertEquals(errorClass, t.getClass());
-    }
-
-    private void verifyPrematureCallback(VoltCallback callback) {
-        assertFalse(callback.hasResult());
-        assertNull(callback.getVoltResponse());
-        assertNull(callback.getVoltError());
-    }
-
-    private void verifyErrorCallback(VoltCallback callback, Class errorClass) {
-        assertTrue(callback.hasResult());
-        assertNull(callback.getVoltResponse());
-        Throwable error  = callback.getVoltError();
-        assertNotNull(error);
-        assertNull(callback.getVoltResponse());
-        Throwable t = callback.getVoltError();
-        assertNotNull(t);
         assertEquals(errorClass, t.getClass());
     }
 

@@ -46,8 +46,7 @@ public class VoltCallback implements Callback<VoltResponse> {
     }
 
     /**
-     * Constructor without a specified timeout. The actual timeout will be set by
-     * the networking libraries.
+     * Constructor without a timeout.
      */
     VoltCallback() {
         this(0);
@@ -73,6 +72,12 @@ public class VoltCallback implements Callback<VoltResponse> {
        }
     }
 
+    /**
+     * Causes the callback to wait for a response until the latch has counted down to
+     * zero or the specified waiting time elapses.
+     *
+     * @return VoltResponse
+     */
     public VoltResponse await() throws InterruptedException {
         if (mTimeout > 0) {
             mlatch.await(mTimeout, TimeUnit.MILLISECONDS);

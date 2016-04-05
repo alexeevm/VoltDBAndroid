@@ -29,10 +29,22 @@ import java.security.NoSuchAlgorithmException;
 public class VoltConnectionUtil {
 
     public static final Charset UTF8ENCODING = Charset.forName("UTF-8");
+    private static final int caseDiff = ('a' - 'A');
+
+    /**
+     * Get a hex-encoded hashed password using SHA-1 in a consistent way.
+     * @param scheme hashing scheme for password.
+     * @param password The password to encode.
+     * @return The hex-encoded string of bytes of the hashed password.
+     */
+    public static String getHexEncodedHashedPassword(ClientAuthScheme scheme, String password) {
+        return hexEncode(getHashedPassword(scheme, password));
+    }
 
     /**
      * Get a hashed password using SHA-1 in a consistent way.
-     * @param scheme hashing scheme for password.
+     *
+     * @param scheme   hashing scheme for password.
      * @param password The password to encode.
      * @return The bytes of the hashed password.
      */
@@ -50,5 +62,32 @@ public class VoltConnectionUtil {
         byte hashedPassword[] = null;
         hashedPassword = md.digest(password.getBytes(UTF8ENCODING));
         return hashedPassword;
+    }
+
+    /**
+     *
+     * @param data A binary array of bytes.
+     * @return A hex-encoded string with double length.
+     */
+    public static String hexEncode(byte[] data) {
+        if (data == null)
+            return null;
+
+        StringBuilder sb = new StringBuilder();
+        for (byte b : data) {
+            // hex encoding same way as java.net.URLEncoder.
+            char ch = Character.forDigit((b >> 4) & 0xF, 16);
+            // to uppercase
+            if (Character.isLetter(ch)) {
+                ch -= caseDiff;
+            }
+            sb.append(ch);
+            ch = Character.forDigit(b & 0xF, 16);
+            if (Character.isLetter(ch)) {
+                ch -= caseDiff;
+            }
+            sb.append(ch);
+        }
+        return sb.toString();
     }
 }

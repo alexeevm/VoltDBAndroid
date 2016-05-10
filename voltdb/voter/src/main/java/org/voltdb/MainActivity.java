@@ -25,7 +25,6 @@ import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.support.v4.app.ActivityCompat;
@@ -42,24 +41,22 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.voltdb.restclient.VoltClient;
 import org.voltdb.restclient.VoltResponse;
-import org.voltdb.restclient.VoltStatus;
+
+import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Action1;
+import rx.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity implements LocationListener {
 
     private static final String LOCALHOST = "http://10.0.2.2:8080";
 
     private static final String VALIDATION_SUCCESS = "VALID";
-    private static final String VOTE_PROCEDURE = "Vote";
-
-    private static final int MAX_NUM_VOTES = 2;
 
     private static final int REQUEST_ID_MULTIPLE_PERMISSIONS = 100;
 
@@ -103,9 +100,9 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                     return;
                 }
 
-                VoltDBVoteTask voteTask = new VoltDBVoteTask();
-                // Both tasks runs on the same thread and the select task is guaranteed to run after the connect finishes
-                voteTask.execute();
+//                VoltDBVoteTask voteTask = new VoltDBVoteTask();
+//                voteTask.execute();
+                callVoltDB();
             }
         });
 
@@ -328,118 +325,39 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         runOnUiThread(setStatus);
     }
 
-
     // VoltDB Stuff
-
-
-    class VoltDBVoteTask extends AsyncTask<Void, Void, VoltResponse> {
-
-        static final int ERR_VOTER = -1;
-        static final int ERR_CALL_INPROGRESS = -2;
-        static final int ERR_CONNECTION = -3;
-        static final int ERR_INVALID_CONTESTANT = 1;
-        static final int ERR_VOTER_OVER_VOTE_LIMIT = 2;
-        static final int SUCCESS = 0;
-
-        @Override
-        protected void onPreExecute() {
-            mStatus.setText("");
-        }
-
-        @Override
-        protected VoltResponse doInBackground(Void... params) {
-            setStatusOnUIThread(getString(R.string.status_calling));
-            if (mCallInProgress.compareAndSet(false, true)) {
-                try {
-                    if (BuildConfig.voter_has_location) {
-                        return vote(mPhoneNumber, mLocation, mContestantId, MAX_NUM_VOTES);
-                    } else {
-                        return vote(mPhoneNumber, mContestantId, MAX_NUM_VOTES);
-                    }
-                } catch (Exception e) {
-                  return new VoltResponse(e);
-                } finally {
+    private void callVoltDB() {
+        if (mCallInProgress.compareAndSet(false, true)) {
+            Callable<VoltResponse> voltCallable = (BuildConfig.voter_has_location) ?
+                    VoltHelper.createVoltCall(getBaseURL(), mPhoneNumber, mLocation, mContestantId) :
+                    VoltHelper.createVoltCall(getBaseURL(), mPhoneNumber, mContestantId);
+            // Create an observable that will be executed off the Main UI thread but results will be processed
+            // on the UI thread
+            ObservableUtils.createObservable(voltCallable).subscribeOn(Schedulers.io()).
+                    observeOn(AndroidSchedulers.mainThread()).subscribe(new Action1<VoltResponse>() {
+                // Success
+                @Override
+                public void call(final VoltResponse response) {
                     mCallInProgress.set(false);
+                    handleResponse(response);
                 }
-            } else {
-                return new VoltResponse(new Exception(getString(R.string.another_call_in_progress))) ;
-            }
-        }
-
-        @Override
-        protected void onPostExecute(VoltResponse response) {
-            String callStatus = null;
-            Throwable error = response.getCallError();
-            if (error != null) {
-                callStatus = error.getMessage();
-            }  else {
-                callStatus = VoltStatus.toString(response.getStatus());
-                if ("SUCCESS".equals(callStatus)) {
-                    List<VoltResponse.VoltTable> results = response.getResults();
-                    assert(results != null && !results.isEmpty());
-                    VoltResponse.VoltTable table = results.get(0);
-                    List<Object> data = table.getData();
-                    assert(data != null && !data.isEmpty());
-                    try {
-                        List<Double> dataElement = (List<Double>) data.get(0);
-                        int status = dataElement.get(0).intValue();
-                        switch ((int) status) {
-                            case ERR_CALL_INPROGRESS:
-                                callStatus = getString(R.string.another_call_in_progress);
-                                break;
-                            case ERR_INVALID_CONTESTANT:
-                                callStatus = getString(R.string.invalid_contestant);
-                                break;
-                            case ERR_VOTER_OVER_VOTE_LIMIT:
-                                callStatus = getString(R.string.vote_limit_exceeded);
-                                break;
-                            case ERR_CONNECTION:
-                                callStatus = getString(R.string.failed_to_connect);
-                                break;
-                            case SUCCESS:
-                                callStatus = getString(R.string.success);
-                                break;
-                            default:
-                                callStatus = getString(R.string.voltdb_error);
-                                break;
-                        }
-                    } catch (Exception e) {
-                        callStatus = getString(R.string.voltdb_error);
-                    }
-                } else if (response.getStatusstring() != null ){
-                    callStatus = response.getStatusstring();
+            }, new Action1<Throwable>() {
+                // Failure
+                @Override
+                public void call(final Throwable error) {
+                    mCallInProgress.set(false);
+                    handleResponse(new VoltResponse(error));
                 }
-            }
-            setStatusOnUIThread(String.format("%s %s.", getString(R.string.status_voltdb), callStatus));
+            });
+        } else {
+            handleResponse(new VoltResponse(new Exception(getString(R.string.another_call_in_progress))));
         }
 
-        @Override
-        protected void onCancelled() {
-            mCallInProgress.set(false);
-            setStatusOnUIThread(getString(R.string.status_call_cancelled));
-        }
+    }
 
-        @Override
-        protected void onCancelled(VoltResponse response) {
-            mCallInProgress.set(false);
-            setStatusOnUIThread(getString(R.string.status_call_cancelled));
-        }
-
-        private VoltResponse vote(long phoneNumber, Location location, int contestantNumber, long maxVotesPerPhoneNumber) throws MalformedURLException{
-            // Init Volt Service
-            String voltURL = getBaseURL();
-            String locationStr = "POINT(" + Double.toString(location.getLongitude()) + " " + Double.toString(location.getLatitude()) + ")";
-            // Make a call
-            VoltClient voltClient = new VoltClient(new URL(voltURL), 5000);
-            return voltClient.callProcedureSync(VOTE_PROCEDURE, phoneNumber, locationStr, contestantNumber, maxVotesPerPhoneNumber);
-        }
-
-        private VoltResponse vote(long phoneNumber, int contestantNumber, long maxVotesPerPhoneNumber) throws  MalformedURLException{
-            // Init Volt Service
-            String voltURL = getBaseURL();
-            VoltClient voltClient = new VoltClient(new URL(voltURL), 5000);
-            return voltClient.callProcedureSync(VOTE_PROCEDURE, phoneNumber, contestantNumber, maxVotesPerPhoneNumber);
-        }
+    protected void handleResponse(VoltResponse response) {
+        String callStatus = VoltHelper.parseResponse(this, response);
+        setStatusOnUIThread(String.format("%s %s.", getString(R.string.status_voltdb), callStatus));
     }
 
 }

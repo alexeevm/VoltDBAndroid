@@ -26,6 +26,11 @@ dependencies {
 
     compile 'com.android.support:appcompat-v7:' + rootProject.ext.sdkVersion
     compile 'com.android.support:design:' + rootProject.ext.sdkVersion
+
+    compile 'io.reactivex:rxjava:1.1.2'
+    compile 'com.squareup.retrofit2:adapter-rxjava:2.0.1'
+    compile 'io.reactivex:rxandroid:1.1.0'
+
     debugCompile project(path: ':voltdbrestclient', configuration: "libraryDebug")
     releaseCompile project(path: ':voltdbrestclient', configuration: "libraryRelease")
 }
